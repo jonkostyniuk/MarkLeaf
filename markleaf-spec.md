@@ -149,18 +149,21 @@ The app should compile to native desktop builds for:
 
 The assumed technical foundation is:
 
-- **Tauri** for desktop shell and native packaging.
-- **Svelte / SvelteKit** for the frontend UI.
+- **Electron** for desktop shell, native packaging, and Node-based system integration.
+- **Svelte / SvelteKit** or a comparable TypeScript frontend stack for the frontend UI.
 - **TypeScript** for frontend logic.
-- **Rust** for Tauri backend commands and system integration.
+- **Node.js** for main-process file system access, native menus, file watching, export command orchestration, and desktop integration.
 
 ## 7. Suggested Technical Stack
 
 ### 7.1 Desktop Shell
 
-- Tauri 2.x
-- Rust backend
-- Native file system access through Tauri permissions and commands
+- Electron
+- Node.js main process
+- Secure preload bridge using `contextBridge`
+- Native file system access through Node APIs
+- Native file watching through `fs.watch`, `chokidar`, or a comparable cross-platform watcher
+- Electron Builder, Electron Forge, or a comparable packaging system
 
 ### 7.2 Frontend
 
@@ -231,7 +234,7 @@ The app should distinguish between:
 
 A practical first implementation may use Pandoc for DOCX export if it provides the most authentic Word document structure. However, the spec should treat Pandoc as an implementation candidate, not a settled requirement.
 
-Pandoc should be explored early because DOCX quality is a major product risk. Other export options should also be evaluated before committing to a final distribution approach, including native Rust/JavaScript DOCX libraries, Markdown AST to DOCX pipelines, HTML-to-DOCX approaches, and template-driven export systems.
+Pandoc should be explored early because DOCX quality is a major product risk. Other export options should also be evaluated before committing to a final distribution approach, including JavaScript DOCX libraries, Markdown AST to DOCX pipelines, HTML-to-DOCX approaches, and template-driven export systems.
 
 DOCX export should consider:
 
@@ -1100,7 +1103,7 @@ The repository should include a root-level `LICENSE` file containing the standar
 
 ### 25.1 MVP Must-Have
 
-- Cross-platform Tauri app shell.
+- Cross-platform Electron app shell.
 - Svelte frontend.
 - Open/save Markdown files.
 - Auto-save on changes, similar in spirit to modern living-document editors.
@@ -1156,7 +1159,7 @@ Goal: Prove the core editing and rendering workflow.
 
 Deliverables:
 
-- Tauri + Svelte project scaffold.
+- Electron + Svelte project scaffold.
 - Open/save Markdown files.
 - CodeMirror editor.
 - Markdown preview.
@@ -1286,6 +1289,7 @@ The following decisions are assumed based on current user direction:
 30. Advanced diffing, AI edit comparison, and Git integration are future features, not MVP requirements.
 31. The product name is **MarkLeaf**.
 32. The project should use the MIT License.
+33. The desktop application should use Electron so the project can stay primarily in TypeScript/JavaScript and use Node.js for native file system workflows.
 
 ## 29. Deferred Design Questions
 

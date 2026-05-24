@@ -1,0 +1,17 @@
+{
+  "name": "markleaf",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first Markdown editor prototype for AI-assisted professional documents.",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/start-electron.cjs",
+    "dev:web": "python3 -m http.server 4173",
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^39.2.7"
+  }
+}

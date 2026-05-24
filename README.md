@@ -29,10 +29,10 @@ The app is local-first, open source, and intended to build for macOS, Windows, a
 
 The current technical direction is:
 
-- Tauri 2.x desktop shell
+- Electron desktop shell
 - Svelte or SvelteKit frontend
 - TypeScript frontend logic
-- Rust backend commands and system integration
+- Node.js main process for file access, file watching, native menus, packaging, and export orchestration
 - CodeMirror 6 for raw Markdown editing
 - GitHub Flavoured Markdown as the initial Markdown baseline
 
@@ -50,6 +50,41 @@ MarkLeaf should be built iteratively:
 6. Explore future AI workflow features such as section copy tools, revision diffing, and optional AI/MCP hooks.
 
 The full product goal includes a direct editable Word-lite mode where Markdown syntax is hidden and edits update the underlying Markdown source. That mode should be reached through careful round-trip testing rather than rushed into the first prototype.
+
+## Current Prototype
+
+This repository currently includes a dependency-free browser prototype for the Phase 1/2 editor workflow. It is not yet the final Electron desktop application.
+
+Run the Electron app locally with:
+
+```sh
+npm run dev
+```
+
+Run the browser fallback prototype with:
+
+```sh
+npm run dev:web
+```
+
+Then open `http://127.0.0.1:4173`.
+
+Implemented prototype features:
+
+- Markdown source editing
+- Split source/preview mode
+- Built-in preview styles
+- Markdown toolbar actions
+- Word and character counts
+- Heading outline
+- Recent file labels
+- Native Electron open/save/save-as dialogs
+- Sidecar metadata creation on save
+- Native file watching through the Electron main process
+- Manual refresh and external-change warnings
+- Browser fallback import/download behavior when not running in Electron
+
+Known implementation gaps are tracked in [ISSUES.md](ISSUES.md).
 
 ## License
 
