@@ -84,6 +84,7 @@ Implemented prototype features:
 - Split source/preview mode
 - Built-in preview styles
 - Markdown toolbar actions using Lucide icon buttons with hover/focus tooltips
+- Paragraph through H6 block formatting, with the outline currently limited to H1-H3
 - Word and character counts
 - Heading outline
 - Recent file links, capped at the five most recently opened files

@@ -118,6 +118,9 @@ app.innerHTML = `
           <option value="h1">H1</option>
           <option value="h2">H2</option>
           <option value="h3">H3</option>
+          <option value="h4">H4</option>
+          <option value="h5">H5</option>
+          <option value="h6">H6</option>
           <option value="blockquote">Quote</option>
           <option value="codeblock">Code block</option>
         </select>
@@ -403,7 +406,7 @@ function isOpenError(message) {
 }
 
 function renderOutline() {
-  const headings = extractHeadings(state.markdown);
+  const headings = extractHeadings(state.markdown).filter((heading) => heading.level <= 3);
   if (!headings.length) {
     outline.innerHTML = '<p class="empty">No headings yet.</p>';
     return;
@@ -832,6 +835,9 @@ function applyBlockFormat(format) {
     h1: `# ${stripped || "Heading"}`,
     h2: `## ${stripped || "Heading"}`,
     h3: `### ${stripped || "Heading"}`,
+    h4: `#### ${stripped || "Heading"}`,
+    h5: `##### ${stripped || "Heading"}`,
+    h6: `###### ${stripped || "Heading"}`,
     blockquote: `> ${stripped || "Quote"}`,
     codeblock: `\`\`\`\n${line || "code"}\n\`\`\``
   };

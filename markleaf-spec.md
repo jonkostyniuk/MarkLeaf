@@ -574,13 +574,25 @@ The toolbar should provide common document controls while inserting or modifying
 - Table insertion
 - Horizontal rule
 
+Deferred Markdown control refinements:
+
+- Fenced code block language selection.
+- List indent and outdent controls.
+- Task list checked/unchecked toggle controls.
+- Table helpers for adding rows, adding columns, and setting alignment.
+- Link/image edit dialogs and local image path picker support.
+- Optional footnote support if a Markdown plugin is adopted.
+- Optional definition lists, admonitions/callouts, and Mermaid rendering as extension features rather than MVP requirements.
+
+Frontmatter should remain out of the main app metadata flow for MVP because app-controlled metadata belongs in sidecar JSON.
+
 ### 11.2 Document Structure Controls
 
 - Insert table of contents, if supported
 - Promote/demote heading
 - Move section up/down, future
 - Collapse heading sections, future
-- Outline panel
+- Outline panel, initially showing H1-H3 only to avoid clutter while still allowing H4-H6 in the editor.
 
 ### 11.3 Export Controls
 
