@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("markleaf", {
   saveDocument: (payload) => ipcRenderer.invoke("document:save", payload),
   saveDocumentAs: (payload) => ipcRenderer.invoke("document:saveAs", payload),
   refreshDocument: (filePath) => ipcRenderer.invoke("document:refresh", filePath),
+  openExternalLink: (url) => ipcRenderer.invoke("link:openExternal", url),
   confirmOpenRecent: (payload) => ipcRenderer.invoke("dialog:confirmOpenRecent", payload),
   notifyMissingRecent: (payload) => ipcRenderer.invoke("dialog:notifyMissingRecent", payload),
   onExternalChange: (callback) => {

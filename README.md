@@ -61,14 +61,6 @@ Run the Electron app locally with:
 make dev
 ```
 
-Run the browser fallback prototype with:
-
-```sh
-make web
-```
-
-Then open `http://127.0.0.1:4173/dist/`.
-
 Run the current verification pass with:
 
 ```sh
@@ -82,9 +74,14 @@ Implemented prototype features:
 - CodeMirror-based Markdown editor
 - `markdown-it` preview rendering with GFM-aligned tables, strikethrough, and task lists
 - Split source/preview mode
+- Right pane labelled `Styled` for the CSS-applied document view
+- Draggable Markdown/Styled split-pane divider with minimum pane widths
 - Built-in preview styles
 - Markdown toolbar actions using Lucide icon buttons with hover/focus tooltips
+- Insert Link dialog with display text, explicit Address/Email modes, smart normalization, and Markdown insertion
+- Styled-pane web and email links open externally through the OS instead of navigating the app window
 - Paragraph through H6 block formatting, with the outline currently limited to H1-H3
+- Block format dropdown follows the current cursor line
 - Word and character counts
 - Heading outline
 - Recent file links, capped at the five most recently opened files
@@ -96,7 +93,7 @@ Implemented prototype features:
 - Native file watching through the Electron main process with MarkLeaf-owned save events ignored by mtime tracking
 - Manual refresh and non-banner `Disk changed` status for external AI/script edits
 - Fixed native-app chrome with non-scrolling app bar, command bar, toolbar, pane headers, and status bar
-- Browser fallback open/download behavior when not running in Electron
+- Desktop-only renderer behavior with a supported minimum Electron window size
 
 Known implementation gaps are tracked in [ISSUES.md](ISSUES.md).
 
@@ -113,7 +110,6 @@ Use `make help` for the maintained command list. The most common commands are:
 - `make install`: install Node dependencies.
 - `make build`: build the renderer into `dist/`.
 - `make dev`: build and launch the Electron desktop app.
-- `make web`: build and serve the browser fallback.
 - `make check`: run tests and Electron syntax checks.
 - `make clean`: remove generated build output.
 

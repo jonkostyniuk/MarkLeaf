@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -30,6 +30,17 @@ function createWindow() {
   });
 
   mainWindow.loadFile(rendererIndex);
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    openAllowedExternalUrl(url);
+    return { action: "deny" };
+  });
+
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    if (url === mainWindow.webContents.getURL()) return;
+    event.preventDefault();
+    openAllowedExternalUrl(url);
+  });
 
   mainWindow.on("close", () => {
     if (!isQuitting) {
@@ -173,6 +184,10 @@ ipcMain.handle("document:refresh", async (_event, filePath) => {
   return openFile(filePath);
 });
 
+ipcMain.handle("link:openExternal", async (_event, url) => {
+  return openAllowedExternalUrl(url);
+});
+
 ipcMain.handle("dialog:confirmOpenRecent", async (_event, payload) => {
   const fileName = payload?.fileName || "this file";
   const result = await dialog.showMessageBox(mainWindow, {
@@ -206,6 +221,19 @@ function openFile(filePath) {
   const result = readFileResult(filePath, markdown);
   watchFile(filePath, result.lastModified);
   return result;
+}
+
+function openAllowedExternalUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (!["http:", "https:", "mailto:"].includes(parsed.protocol)) {
+      return { ok: false, error: "Only web and email links can be opened externally." };
+    }
+    shell.openExternal(parsed.toString());
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error.message || "Unable to open external link." };
+  }
 }
 
 async function saveAs(payload) {

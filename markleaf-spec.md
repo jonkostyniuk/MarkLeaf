@@ -560,11 +560,12 @@ The toolbar should provide common document controls while inserting or modifying
 ### 11.1 Basic Formatting Controls
 
 - Heading dropdown: Paragraph, H1, H2, H3, H4, H5, H6
+- Heading dropdown should reflect the current cursor line's block format instead of resetting after use.
 - Bold
 - Italic
 - Strikethrough, if supported
 - Inline code
-- Link
+- Link insertion via an `Insert Link` dialog with `Text to display`, explicit `Address` and `Email` modes, and smart Markdown link normalization.
 - Image
 - Blockquote
 - Bullet list
@@ -580,11 +581,14 @@ Deferred Markdown control refinements:
 - List indent and outdent controls.
 - Task list checked/unchecked toggle controls.
 - Table helpers for adding rows, adding columns, and setting alignment.
-- Link/image edit dialogs and local image path picker support.
+- Link editing for existing links.
+- Image edit dialog and local image path picker support.
 - Optional footnote support if a Markdown plugin is adopted.
 - Optional definition lists, admonitions/callouts, and Mermaid rendering as extension features rather than MVP requirements.
 
 Frontmatter should remain out of the main app metadata flow for MVP because app-controlled metadata belongs in sidecar JSON.
+
+Rendered links in the Styled pane should not navigate the Electron app window away from MarkLeaf. Web and email links should open externally through the operating system; unsupported local/document links should be blocked until a deliberate local-link workflow is designed.
 
 ### 11.2 Document Structure Controls
 
@@ -1043,10 +1047,13 @@ Suggested layout:
 - Left sidebar for document metadata, outline, recent files, styles, or later file/workspace panels.
 - Left sidebar sections should be independently collapsible so the user can keep only the currently useful panels open.
 - Main editing area using pane headers and app-like split panes.
-- Right preview pane in split mode.
+- Right `Styled` pane in split mode, representing the CSS-applied document view that informs export output.
+- Markdown and Styled panes should be resizable with a draggable divider while preserving practical minimum widths for both panes.
 - Bottom status bar.
 
 The top app bar, command bar, toolbar, and status bar should remain fixed. Scrolling should be contained inside the sidebar, source editor, and preview panes. The app should present as a desktop productivity tool, taking practical UX cues from VS Code's editor density and Word's document command surface, rather than as a web page.
+
+The Markdown/Split mode switch should present as a connected segmented control rather than two unrelated buttons. The selected segment should use the active/darker state.
 
 ### 18.1.1 Iconography
 
@@ -1201,7 +1208,7 @@ The repository should include a root-level `LICENSE` file containing the standar
 - TypeScript renderer frontend, with Svelte/SvelteKit deferred unless needed.
 - Open/save Markdown files.
 - Startup and New Document should present a blank untitled workspace, not seeded sample Markdown.
-- Auto-save on changes for documents that already have a writable file path or browser file handle.
+- Auto-save on changes for documents that already have a writable file path.
 - New unsaved documents should not trigger save-location prompts through auto-save.
 - Manual save command retained as an explicit sync/write-to-disk action.
 - Single Markdown file workflow.
@@ -1398,7 +1405,7 @@ The following decisions are assumed based on current user direction:
 38. The UI should use fixed native-app chrome: top app bar, command bar, toolbar, pane headers, and status bar should not scroll with document content.
 39. Lucide should be the default icon system for app command and toolbar icons, with accessible labels and hover/focus tooltips on icon-only buttons.
 40. Brand/logo source files should live only under `assets/brand/`; generated `dist/` files are runtime build output and not source assets.
-41. Common project commands should be exposed through the root `Makefile` so development, browser fallback, checks, and cleanup stay consistent.
+41. Common project commands should be exposed through the root `Makefile` so Electron development, checks, and cleanup stay consistent.
 42. Startup and New Document should clear the workspace to a blank untitled Markdown document; sample content belongs in examples or style previews, not the live editor by default.
 43. Recent files should be path-backed links capped at five entries; opening a recent file should confirm first, save or prompt to save the current dirty document, and remove missing files after notifying the user.
 44. Document status should be rendered through a shared icon-and-colour status component in both the title bar and sidebar.

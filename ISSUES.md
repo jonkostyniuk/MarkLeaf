@@ -177,6 +177,33 @@ Resolution:
 Next step:
 - Continue applying the same native-app consistency standard to settings and export UI.
 
+## ISSUE-014: Browser fallback and mobile layout removed
+
+Status: resolved
+Area: app
+Raised in: 2026-05-24
+Resolved in: 2026-05-24
+Owner: shared
+
+Context:
+- MarkLeaf is being built as a macOS/Electron desktop app, not a mobile or browser-first web app.
+- The previous renderer kept a browser fallback command and mobile-style single-column CSS from the early prototype.
+
+Question:
+- Should MarkLeaf continue carrying browser fallback and mobile layout behavior?
+
+Impact:
+- Browser/mobile fallback behavior added complexity and could create layouts or code paths that do not match the supported desktop app experience.
+
+Resolution:
+- Removed the `make web` and `npm run dev:web` commands.
+- Removed the mobile-width CSS fallback.
+- Removed browser file-handle open/save/reload paths from the renderer.
+- Kept Electron's current minimum window size as the supported desktop baseline.
+
+Next step:
+- Revisit supported minimum window dimensions if the app UI grows beyond the current `960x640` Electron minimum.
+
 ## ISSUE-009: Brand asset source-of-truth location
 
 Status: resolved
@@ -360,7 +387,7 @@ Resolution:
 - Added Electron main-process document open, save, save-as, refresh, and file watching.
 - Added sidecar metadata creation on save.
 - Exposed these operations to the renderer through a preload bridge.
-- Kept browser fallback behavior for direct web prototype usage.
+- Initially kept browser fallback behavior for direct web prototype usage; this was later removed in ISSUE-014.
 
 Next step:
 - Harden conflict handling and sidecar schema validation during the next MVP pass.

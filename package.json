@@ -8,7 +8,6 @@
   "scripts": {
     "build:renderer": "node scripts/build-renderer.cjs",
     "dev": "npm run build:renderer && node scripts/start-electron.cjs",
-    "dev:web": "npm run build:renderer && python3 -m http.server 4173",
     "test": "node --test"
   },
   "license": "MIT",

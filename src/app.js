@@ -30,9 +30,9 @@ import {
 import { extractHeadings, getWordCount, renderMarkdown } from "./markdown.js";
 
 const AUTOSAVE_DELAY_MS = 1200;
-const WATCH_INTERVAL_MS = 3000;
 const RECENT_FILES_KEY = "markleaf.recentFiles";
 const MAX_RECENT_FILES = 5;
+const MIN_PANE_WIDTH_PX = 280;
 const EMPTY_DOCUMENT = "";
 const desktopApi = window.markleaf;
 const isElectron = desktopApi?.platform === "electron";
@@ -54,7 +54,6 @@ const styles = {
 
 const state = {
   markdown: EMPTY_DOCUMENT,
-  fileHandle: null,
   filePath: null,
   fileName: "Untitled.md",
   lastModified: null,
@@ -64,6 +63,10 @@ const state = {
   diskChanged: false,
   mode: "split",
   selectedStyle: "memo",
+  splitRatio: 0.5,
+  resizingSplit: false,
+  linkSelection: null,
+  linkKind: "web",
   autosaveTimer: null,
   watchTimer: null,
   recentFiles: loadRecentFiles()
@@ -143,9 +146,9 @@ app.innerHTML = `
       <div class="tool-spacer"></div>
       <div class="tool-group">
         <select id="styleSelect" aria-label="Preview style"></select>
-        <div class="mode-switch" role="group" aria-label="View mode">
-          <button type="button" data-mode="markdown" class="icon-button text-icon tooltip-right" aria-label="Markdown mode" data-tooltip="Markdown mode">MD</button>
-          <button type="button" data-mode="split" class="icon-button tooltip-right" aria-label="Split mode" data-tooltip="Split mode">${icon(Columns2)}</button>
+        <div class="mode-switch segmented-control" role="radiogroup" aria-label="View mode">
+          <button type="button" data-mode="markdown" class="icon-button text-icon tooltip-right" role="radio" aria-label="Markdown mode" aria-checked="false" data-tooltip="Markdown mode">MD</button>
+          <button type="button" data-mode="split" class="icon-button tooltip-right" role="radio" aria-label="Split mode" aria-checked="false" data-tooltip="Split mode">${icon(Columns2)}</button>
         </div>
       </div>
     </section>
@@ -182,11 +185,12 @@ app.innerHTML = `
           </header>
           <div id="editor" class="cm-host" aria-label="Markdown source"></div>
         </section>
+        <div id="paneResizeHandle" class="pane-resize-handle" role="separator" aria-label="Resize Markdown and Styled panes" aria-orientation="vertical" tabindex="0"></div>
         <section class="pane preview-pane">
           <header class="pane-header">
-            <span>Preview</span>
+            <span>Styled</span>
           </header>
-          <article id="preview" class="preview document" aria-label="Rendered preview"></article>
+          <article id="preview" class="preview document" aria-label="Styled document"></article>
         </section>
       </section>
     </section>
@@ -196,12 +200,42 @@ app.innerHTML = `
       <span id="modeStatus"></span>
       <span id="watchStatus"></span>
     </footer>
+
+    <div id="linkDialog" class="modal-backdrop" hidden>
+      <form id="linkForm" class="modal" aria-labelledby="linkDialogTitle">
+        <header class="modal-header">
+          <h2 id="linkDialogTitle">Insert Link</h2>
+        </header>
+        <div class="modal-body">
+          <label class="form-field">
+            <span>Text to display</span>
+            <input id="linkTextInput" type="text" autocomplete="off">
+          </label>
+          <div class="form-field">
+            <span>Link type</span>
+            <div class="segmented-control link-type-control" role="radiogroup" aria-label="Link type">
+              <button type="button" data-link-type="web" class="icon-button text-icon" role="radio" aria-checked="true">Address</button>
+              <button type="button" data-link-type="email" class="icon-button text-icon" role="radio" aria-checked="false">Email</button>
+            </div>
+          </div>
+          <label class="form-field">
+            <span id="linkAddressLabel">Address</span>
+            <input id="linkAddressInput" type="text" autocomplete="off" placeholder="https://example.com">
+          </label>
+        </div>
+        <footer class="modal-actions">
+          <button type="button" data-link-action="cancel">Cancel</button>
+          <button type="submit" class="primary-action">Insert</button>
+        </footer>
+      </form>
+    </div>
   </main>
 `;
 
 const editor = document.querySelector("#editor");
 const preview = document.querySelector("#preview");
 const editorRegion = document.querySelector("#editorRegion");
+const paneResizeHandle = document.querySelector("#paneResizeHandle");
 const fileName = document.querySelector("#fileName");
 const saveState = document.querySelector("#saveState");
 const wordCount = document.querySelector("#wordCount");
@@ -215,6 +249,11 @@ const modeStatus = document.querySelector("#modeStatus");
 const watchStatus = document.querySelector("#watchStatus");
 const titleFileName = document.querySelector("#titleFileName");
 const titleSaveState = document.querySelector("#titleSaveState");
+const linkDialog = document.querySelector("#linkDialog");
+const linkForm = document.querySelector("#linkForm");
+const linkTextInput = document.querySelector("#linkTextInput");
+const linkAddressInput = document.querySelector("#linkAddressInput");
+const linkAddressLabel = document.querySelector("#linkAddressLabel");
 
 initialize();
 
@@ -223,6 +262,7 @@ function initialize() {
   populateStyleSelect();
   initializeEditor();
   bindEvents();
+  bindPaneResize();
   bindDesktopEvents();
   render();
 }
@@ -250,12 +290,17 @@ function createEditorState(doc) {
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
-        if (!update.docChanged || suppressEditorUpdate) return;
-        state.markdown = getEditorText();
-        state.dirty = true;
-        state.saveError = "";
-        scheduleAutoSave();
-        render();
+        if (update.docChanged && !suppressEditorUpdate) {
+          state.markdown = getEditorText();
+          state.dirty = true;
+          state.saveError = "";
+          scheduleAutoSave();
+          render();
+          return;
+        }
+        if (update.selectionSet) {
+          updateBlockSelect();
+        }
       })
     ]
   });
@@ -265,6 +310,16 @@ function bindEvents() {
   app.addEventListener("click", (event) => {
     const target = event.target.closest("button");
     if (!target) return;
+
+    if (target.dataset.linkAction === "cancel") {
+      closeLinkDialog();
+      return;
+    }
+
+    if (target.dataset.linkType) {
+      setLinkKind(target.dataset.linkType);
+      return;
+    }
 
     if (target.dataset.action) {
       handleAction(target.dataset.action);
@@ -286,7 +341,6 @@ function bindEvents() {
 
   blockSelect.addEventListener("change", () => {
     applyBlockFormat(blockSelect.value);
-    blockSelect.value = "paragraph";
   });
 
   styleSelect.addEventListener("change", () => {
@@ -294,6 +348,25 @@ function bindEvents() {
     state.dirty = true;
     scheduleAutoSave();
     render();
+  });
+
+  preview.addEventListener("click", handlePreviewLinkClick);
+
+  linkForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    insertConfiguredLink();
+  });
+
+  linkDialog.addEventListener("click", (event) => {
+    if (event.target === linkDialog) {
+      closeLinkDialog();
+    }
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !linkDialog.hidden) {
+      closeLinkDialog();
+    }
   });
 
   window.addEventListener("beforeunload", (event) => {
@@ -327,6 +400,7 @@ function render() {
   preview.innerHTML = renderMarkdown(state.markdown);
   preview.className = `preview document ${styles[state.selectedStyle].className}`;
   editorRegion.dataset.mode = state.mode;
+  updateSplitLayout();
 
   fileName.textContent = state.fileName;
   saveState.innerHTML = renderStatus(documentStatus, "sidebar");
@@ -341,6 +415,7 @@ function render() {
   renderOutline();
   renderRecentFiles();
   updateModeButtons();
+  updateBlockSelect();
 }
 
 function getDocumentStatus() {
@@ -376,7 +451,7 @@ function getDocumentStatus() {
       icon: AlertTriangle
     };
   }
-  if (!state.filePath && !state.fileHandle && state.fileName === "Untitled.md") {
+  if (!state.filePath && state.fileName === "Untitled.md") {
     return {
       type: "new",
       label: "New document",
@@ -441,8 +516,69 @@ function renderRecentFiles() {
 
 function updateModeButtons() {
   app.querySelectorAll("[data-mode]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.mode === state.mode);
+    const active = button.dataset.mode === state.mode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-checked", String(active));
   });
+}
+
+function bindPaneResize() {
+  paneResizeHandle.addEventListener("pointerdown", (event) => {
+    if (state.mode !== "split") return;
+    state.resizingSplit = true;
+    paneResizeHandle.setPointerCapture(event.pointerId);
+    document.body.classList.add("resizing-pane");
+    updateSplitRatio(event.clientX);
+  });
+
+  paneResizeHandle.addEventListener("pointermove", (event) => {
+    if (!state.resizingSplit) return;
+    updateSplitRatio(event.clientX);
+  });
+
+  paneResizeHandle.addEventListener("pointerup", (event) => {
+    state.resizingSplit = false;
+    paneResizeHandle.releasePointerCapture(event.pointerId);
+    document.body.classList.remove("resizing-pane");
+  });
+
+  paneResizeHandle.addEventListener("pointercancel", () => {
+    state.resizingSplit = false;
+    document.body.classList.remove("resizing-pane");
+  });
+
+  paneResizeHandle.addEventListener("keydown", (event) => {
+    if (state.mode !== "split") return;
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const direction = event.key === "ArrowLeft" ? -1 : 1;
+    state.splitRatio = clampSplitRatio(state.splitRatio + direction * 0.03);
+    updateSplitLayout();
+  });
+}
+
+function updateSplitRatio(clientX) {
+  const bounds = editorRegion.getBoundingClientRect();
+  if (!bounds.width) return;
+  const rawRatio = (clientX - bounds.left) / bounds.width;
+  state.splitRatio = clampSplitRatio(rawRatio);
+  updateSplitLayout();
+}
+
+function clampSplitRatio(ratio) {
+  const width = editorRegion.getBoundingClientRect().width || 1;
+  const minRatio = Math.min(0.45, MIN_PANE_WIDTH_PX / width);
+  return Math.min(1 - minRatio, Math.max(minRatio, ratio));
+}
+
+function updateSplitLayout() {
+  if (state.mode !== "split") {
+    editorRegion.style.removeProperty("--source-pane-width");
+    return;
+  }
+  const ratio = clampSplitRatio(state.splitRatio);
+  state.splitRatio = ratio;
+  editorRegion.style.setProperty("--source-pane-width", `${(ratio * 100).toFixed(2)}%`);
 }
 
 function scheduleAutoSave() {
@@ -460,7 +596,7 @@ function clearAutoSave() {
 
 function canAutoSave() {
   if (state.diskChanged) return false;
-  return isElectron ? Boolean(state.filePath) : Boolean(state.fileHandle);
+  return Boolean(state.filePath);
 }
 
 async function saveNow(options = {}) {
@@ -477,86 +613,24 @@ async function saveNow(options = {}) {
     return;
   }
 
-  if (!state.fileHandle) {
-    state.dirty = true;
-    render();
-    return;
-  }
-
-  try {
-    state.saving = true;
-    state.saveError = "";
-    render();
-    const writable = await state.fileHandle.createWritable();
-    await writable.write(state.markdown);
-    await writable.close();
-    const file = await state.fileHandle.getFile();
-    state.lastModified = file.lastModified;
-    state.dirty = false;
-    state.saving = false;
-    state.diskChanged = false;
-  } catch (error) {
-    state.saving = false;
-    state.saveError = error.message || "Unable to save";
-  }
-
+  state.saveError = "MarkLeaf must run as the Electron desktop app to save files.";
   render();
 }
 
 async function openWithPicker() {
-  if (isElectron) {
-    const result = await desktopApi.openDocument();
-    if (result?.ok) {
-      applyOpenedDocument(result);
-    } else if (!result?.canceled) {
-      state.saveError = result?.error || "Unable to open file";
-      render();
-    }
-    return;
-  }
-
-  if (!window.showOpenFilePicker) {
-    state.saveError = "Browser file picker handles are unavailable in this environment.";
+  if (!isElectron) {
+    state.saveError = "MarkLeaf must run as the Electron desktop app to open files.";
     render();
     return;
   }
 
-  try {
-    const [handle] = await window.showOpenFilePicker({
-      multiple: false,
-      types: [
-        {
-          description: "Markdown files",
-          accept: {
-            "text/markdown": [".md", ".markdown", ".mdown"],
-            "text/plain": [".txt"]
-          }
-        }
-      ]
-    });
-    await openFileHandle(handle);
-  } catch (error) {
-    if (error.name !== "AbortError") {
-      state.saveError = error.message || "Unable to open file";
-      render();
-    }
+  const result = await desktopApi.openDocument();
+  if (result?.ok) {
+    applyOpenedDocument(result);
+  } else if (!result?.canceled) {
+    state.saveError = result?.error || "Unable to open file";
+    render();
   }
-}
-
-async function openFileHandle(handle) {
-  clearAutoSave();
-  const file = await handle.getFile();
-  state.fileHandle = handle;
-  state.filePath = null;
-  state.fileName = file.name;
-  state.markdown = await file.text();
-  state.lastModified = file.lastModified;
-  state.dirty = false;
-  state.saveError = "";
-  state.diskChanged = false;
-  resetEditorDocument(state.markdown);
-  startWatching();
-  render();
 }
 
 async function openRecentFile(filePath) {
@@ -609,11 +683,6 @@ async function prepareCurrentDocumentForSwitch() {
     return Boolean(saveResult?.ok);
   }
 
-  if (state.fileHandle) {
-    await saveNow();
-    return !state.dirty && !state.saveError;
-  }
-
   return false;
 }
 
@@ -635,48 +704,17 @@ async function refreshFromDisk() {
     return;
   }
 
-  if (!state.fileHandle) {
-    state.saveError = "Refresh requires a browser file handle. Use Open in a supported browser.";
-    render();
-    return;
-  }
-
-  const file = await state.fileHandle.getFile();
-  state.markdown = await file.text();
-  state.lastModified = file.lastModified;
-  state.dirty = false;
-  state.saveError = "";
-  state.diskChanged = false;
-  resetEditorDocument(state.markdown);
+  state.saveError = "MarkLeaf must run as the Electron desktop app to reload files.";
   render();
 }
 
-function startWatching() {
-  stopWatching();
-  state.watchTimer = window.setInterval(async () => {
-    if (!state.fileHandle || state.saving) return;
-    try {
-      const file = await state.fileHandle.getFile();
-      if (state.lastModified && file.lastModified !== state.lastModified) {
-        state.diskChanged = true;
-        render();
-      }
-    } catch (error) {
-      state.saveError = error.message || "Unable to watch file";
-      render();
-    }
-  }, WATCH_INTERVAL_MS);
-}
-
 function stopWatching() {
-  window.clearInterval(state.watchTimer);
   state.watchTimer = null;
 }
 
 function createNewDocument() {
   desktopApi?.newDocument();
   clearAutoSave();
-  state.fileHandle = null;
   state.filePath = null;
   state.fileName = "Untitled.md";
   state.lastModified = null;
@@ -755,7 +793,6 @@ async function saveWithDesktopApi(saveAsDocument, options = {}) {
 
 function applyOpenedDocument(result) {
   clearAutoSave();
-  state.fileHandle = null;
   state.filePath = result.filePath || null;
   state.fileName = result.fileName || "Untitled.md";
   state.markdown = result.markdown || "";
@@ -766,7 +803,6 @@ function applyOpenedDocument(result) {
   state.diskChanged = false;
   resetEditorDocument(state.markdown);
   addRecentFile(result);
-  if (!isElectron) startWatching();
   render();
 }
 
@@ -795,14 +831,12 @@ function bindDesktopEvents() {
 
 function getPathStatus() {
   if (state.filePath) return state.filePath;
-  if (state.fileHandle) return `Opened with browser file handle: ${state.fileName}`;
-  return isElectron ? "No file opened" : "No writable file handle";
+  return "No file opened";
 }
 
 function getWatchStatus() {
   if (state.filePath) return "Native file watcher active";
-  if (state.fileHandle) return "External change polling active";
-  return isElectron ? "Open a file to enable native watching" : "External watch unavailable until a file handle is opened";
+  return "Open a file to enable native watching";
 }
 
 function wrapSelection(pattern) {
@@ -813,8 +847,12 @@ function wrapSelection(pattern) {
 }
 
 function insertMarkdown(type) {
+  if (type === "link") {
+    openLinkDialog();
+    return;
+  }
+
   const inserts = {
-    link: "[link text](https://example.com)",
     image: "![image alt](image.png)",
     ul: "- List item",
     ol: "1. List item",
@@ -824,6 +862,114 @@ function insertMarkdown(type) {
   };
   const { start, end } = getSelectionRange();
   replaceSelection(inserts[type] || "", start, end);
+}
+
+function openLinkDialog() {
+  const selection = getSelectionRange();
+  const selectedText = state.markdown.slice(selection.start, selection.end).trim();
+  const selectedLooksLikeAddress = looksLikeLinkAddress(selectedText);
+  const selectedLooksLikeEmail = looksLikeEmailAddress(selectedText) || /^mailto:/i.test(selectedText);
+  state.linkSelection = selection;
+
+  setLinkKind(selectedLooksLikeEmail ? "email" : "web");
+  linkTextInput.value = selectedText || "link text";
+  linkAddressInput.value = selectedLooksLikeAddress ? normalizeLinkAddress(selectedText) : "";
+  linkDialog.hidden = false;
+
+  window.setTimeout(() => {
+    if (selectedText) {
+      linkAddressInput.focus();
+      linkAddressInput.select();
+    } else {
+      linkTextInput.focus();
+      linkTextInput.select();
+    }
+  });
+}
+
+function setLinkKind(kind) {
+  state.linkKind = kind === "email" ? "email" : "web";
+  app.querySelectorAll("[data-link-type]").forEach((button) => {
+    const active = button.dataset.linkType === state.linkKind;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-checked", String(active));
+  });
+  linkAddressLabel.textContent = state.linkKind === "email" ? "Email address" : "Address";
+  linkAddressInput.placeholder = state.linkKind === "email" ? "name@example.com" : "https://example.com";
+}
+
+function closeLinkDialog() {
+  linkDialog.hidden = true;
+  state.linkSelection = null;
+  editorView.focus();
+}
+
+function insertConfiguredLink() {
+  const selection = state.linkSelection || getSelectionRange();
+  const text = linkTextInput.value.trim() || "link text";
+  const address = normalizeLinkAddress(linkAddressInput.value.trim(), state.linkKind);
+  if (!address) {
+    linkAddressInput.focus();
+    return;
+  }
+
+  closeLinkDialog();
+  replaceSelection(`[${escapeMarkdownLinkText(text)}](${escapeMarkdownLinkAddress(address)})`, selection.start, selection.end);
+}
+
+async function handlePreviewLinkClick(event) {
+  const link = event.target.closest("a");
+  if (!link || !preview.contains(link)) return;
+
+  const href = link.getAttribute("href") || "";
+  if (!href) return;
+
+  event.preventDefault();
+
+  if (href.startsWith("#")) {
+    const targetId = href.slice(1);
+    if (targetId) {
+      preview.querySelector(`#${CSS.escape(targetId)}`)?.scrollIntoView({ block: "start" });
+    }
+    return;
+  }
+
+  if (!desktopApi?.openExternalLink) {
+    state.saveError = "MarkLeaf must run as the Electron desktop app to open links externally.";
+    render();
+    return;
+  }
+
+  const result = await desktopApi.openExternalLink(href);
+  if (!result?.ok) {
+    state.saveError = result?.error || "Unable to open this link.";
+    render();
+  }
+}
+
+function looksLikeLinkAddress(value) {
+  return /^(https?:\/\/|mailto:|#|\.{1,2}\/|\/)/i.test(value) || looksLikeEmailAddress(value) || /^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(value);
+}
+
+function looksLikeEmailAddress(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function normalizeLinkAddress(value, kind = "web") {
+  if (!value) return "";
+  if (kind === "email" && !/^mailto:/i.test(value)) return `mailto:${value.replace(/^mailto:/i, "")}`;
+  if (looksLikeEmailAddress(value)) return `mailto:${value}`;
+  if (/^(https?:\/\/|mailto:|#|\.{1,2}\/|\/)/i.test(value)) return value;
+  if (/^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(value)) return `https://${value}`;
+  return value;
+}
+
+function escapeMarkdownLinkText(value) {
+  return value.replace(/\\/g, "\\\\").replace(/]/g, "\\]");
+}
+
+function escapeMarkdownLinkAddress(value) {
+  return value.replace(/\\/g, "\\\\").replace(/\)/g, "\\)");
 }
 
 function applyBlockFormat(format) {
@@ -842,6 +988,21 @@ function applyBlockFormat(format) {
     codeblock: `\`\`\`\n${line || "code"}\n\`\`\``
   };
   replaceSelection(replacements[format] || line, lineRange.start, lineRange.end);
+}
+
+function updateBlockSelect() {
+  if (!editorView || document.activeElement === blockSelect) return;
+  blockSelect.value = getCurrentBlockFormat();
+}
+
+function getCurrentBlockFormat() {
+  const lineRange = getCurrentLineRange();
+  const line = state.markdown.slice(lineRange.start, lineRange.end);
+  const heading = /^(#{1,6})\s+/.exec(line);
+  if (heading) return `h${heading[1].length}`;
+  if (/^>\s+/.test(line)) return "blockquote";
+  if (/^```\w*\s*$/.test(line)) return "codeblock";
+  return "paragraph";
 }
 
 function getCurrentLineRange() {
