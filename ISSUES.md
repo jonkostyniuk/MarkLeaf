@@ -66,6 +66,57 @@ Next step:
 
 ## Resolved
 
+## ISSUE-007: Native app chrome and fixed pane layout
+
+Status: resolved
+Area: app
+Raised in: 2026-05-23
+Resolved in: 2026-05-23
+Owner: codex
+
+Context:
+- The early Electron UI presented more like a rough web page than a native desktop productivity app.
+- The top header and subheaders scrolled with the content.
+
+Question:
+- How should the MVP shell present more like Word or VS Code while staying simple?
+
+Impact:
+- A web-page-feeling shell reduced confidence in the desktop app direction and made the editor feel less native.
+
+Resolution:
+- Reworked the UI into fixed app chrome: app bar, command bar, toolbar, pane headers, internal pane scrolling, and status bar.
+- Updated the spec to state that top app chrome should not scroll with document content.
+
+Next step:
+- Continue refining details during settings/export work, especially keyboard affordances and pane sizing.
+
+## ISSUE-006: Electron menu undo and redo integration
+
+Status: resolved
+Area: editor
+Raised in: 2026-05-23
+Resolved in: 2026-05-23
+Owner: codex
+
+Context:
+- Undo and redo appeared not to work reliably after CodeMirror was introduced.
+- Electron native menu roles did not consistently target the CodeMirror editor surface.
+
+Question:
+- Should undo and redo rely on native menu roles, or should they be routed into the editor explicitly?
+
+Impact:
+- Broken undo/redo makes Markdown editing unsafe for daily use.
+
+Resolution:
+- Routed Electron menu undo/redo commands through the preload bridge.
+- Invoked CodeMirror's `undo()` and `redo()` commands directly in the renderer.
+- Updated the spec to call out explicit CodeMirror undo/redo routing.
+
+Next step:
+- Add broader editor command tests or manual QA notes once UI testing infrastructure exists.
+
 ## ISSUE-005: CodeMirror and Markdown parser foundation
 
 Status: resolved

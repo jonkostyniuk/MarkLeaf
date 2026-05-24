@@ -30,7 +30,7 @@ The app is local-first, open source, and intended to build for macOS, Windows, a
 The current technical direction is:
 
 - Electron desktop shell
-- Svelte or SvelteKit frontend
+- TypeScript renderer frontend, with Svelte or SvelteKit optional later
 - TypeScript frontend logic
 - Node.js main process for file access, file watching, native menus, packaging, and export orchestration
 - CodeMirror 6 for raw Markdown editing
@@ -88,10 +88,12 @@ Implemented prototype features:
 
 Known implementation gaps are tracked in [ISSUES.md](ISSUES.md).
 
+## Project Documents
+
+- [markleaf-spec.md](markleaf-spec.md): product direction, technical architecture, development phases, design principles, and MVP scope.
+- [ISSUES.md](ISSUES.md): running backlog for unresolved questions, implementation blockers, follow-up decisions, and resolved project notes.
+- [LICENSE](LICENSE): MIT License for the project.
+
 ## License
 
 MarkLeaf is licensed under the MIT License. See [LICENSE](LICENSE).
-
-## Specification
-
-The current product and technical specification lives in [markleaf-spec.md](markleaf-spec.md).

@@ -150,7 +150,7 @@ The app should compile to native desktop builds for:
 The assumed technical foundation is:
 
 - **Electron** for desktop shell, native packaging, and Node-based system integration.
-- **Svelte / SvelteKit** or a comparable TypeScript frontend stack for the frontend UI.
+- **A TypeScript renderer** for the frontend UI. Svelte or SvelteKit may be adopted later if the UI grows complex enough to justify it.
 - **TypeScript** for frontend logic.
 - **Node.js** for main-process file system access, native menus, file watching, export command orchestration, and desktop integration.
 
@@ -167,7 +167,8 @@ The assumed technical foundation is:
 
 ### 7.2 Frontend
 
-- Svelte or SvelteKit
+- TypeScript renderer
+- Optional future migration to Svelte or SvelteKit if component complexity warrants it
 - TypeScript
 - CSS variables for theming
 - Component-based layout
@@ -193,6 +194,12 @@ Required GFM-aligned features:
 - Autolinks, if supported cleanly
 - Fenced code blocks
 
+Current implementation direction:
+
+- Use `markdown-it` for preview rendering.
+- Use a task-list plugin for GitHub-style task lists.
+- Keep raw HTML disabled by default.
+
 ### 7.4 Editor Engine
 
 Candidate editor engines:
@@ -205,6 +212,8 @@ Candidate editor engines:
 Initial recommendation for the Markdown text editor mode:
 
 - **CodeMirror 6** for raw Markdown editing.
+
+The Electron menu should route editor-specific commands such as undo and redo into CodeMirror directly rather than relying only on native menu roles. This avoids focus-target ambiguity between the Electron shell and the editor surface.
 
 Possible future styled editing mode:
 
@@ -975,12 +984,16 @@ Git should not be required for normal use.
 
 Suggested layout:
 
-- Top menu bar.
-- Toolbar with Markdown-compatible formatting controls.
-- Left sidebar for file tree, outline, or style presets.
-- Main editing area.
+- Native-feeling app chrome with fixed top bars, not a scrolling webpage header.
+- Compact app/title bar showing product identity, current document name, and saved/saving/error state.
+- Command bar for file-level actions such as New, Open, Save, Save As, and Refresh.
+- Grouped toolbar with Markdown-compatible formatting controls, similar in spirit to lightweight Word controls.
+- Left sidebar for document metadata, outline, recent files, styles, or later file/workspace panels.
+- Main editing area using pane headers and app-like split panes.
 - Right preview pane in split mode.
 - Bottom status bar.
+
+The top app bar, command bar, toolbar, and status bar should remain fixed. Scrolling should be contained inside the sidebar, source editor, and preview panes. The app should present as a desktop productivity tool, taking practical UX cues from VS Code's editor density and Word's document command surface, rather than as a web page.
 
 ### 18.2 Status Bar
 
@@ -994,6 +1007,8 @@ Status bar may include:
 - Current CSS style.
 - External change status.
 - Line/column in Markdown mode.
+
+The status bar should behave like native app chrome and remain fixed at the bottom of the window.
 
 ### 18.3 Sidebar Panels
 
@@ -1119,7 +1134,7 @@ The repository should include a root-level `LICENSE` file containing the standar
 ### 25.1 MVP Must-Have
 
 - Cross-platform Electron app shell.
-- Svelte frontend.
+- TypeScript renderer frontend, with Svelte/SvelteKit deferred unless needed.
 - Open/save Markdown files.
 - Auto-save on changes, similar in spirit to modern living-document editors.
 - Manual save command retained as an explicit sync/write-to-disk action.
@@ -1127,6 +1142,7 @@ The repository should include a root-level `LICENSE` file containing the standar
 - Sidecar JSON metadata created beside the Markdown file once the file is saved or auto-saved through the editor.
 - GitHub Flavoured Markdown baseline.
 - Markdown mode using CodeMirror or equivalent.
+- Undo and redo integrated with CodeMirror and Electron menu shortcuts.
 - Split mode with rendered preview.
 - Architecture that does not block a future direct editable CSS-styled Word-lite mode.
 - Toolbar actions in Markdown and split modes that update the underlying Markdown source.
@@ -1174,10 +1190,10 @@ Goal: Prove the core editing and rendering workflow.
 
 Deliverables:
 
-- Electron + Svelte project scaffold.
+- Electron + TypeScript renderer scaffold.
 - Open/save Markdown files.
 - CodeMirror editor.
-- Markdown preview.
+- `markdown-it` Markdown preview.
 - Split mode.
 - Basic CSS style switching.
 - Manual refresh from disk.
@@ -1305,6 +1321,10 @@ The following decisions are assumed based on current user direction:
 31. The product name is **MarkLeaf**.
 32. The project should use the MIT License.
 33. The desktop application should use Electron so the project can stay primarily in TypeScript/JavaScript and use Node.js for native file system workflows.
+34. The first renderer implementation should remain a minimal TypeScript renderer bundled with esbuild; Svelte/SvelteKit is optional future work, not a current MVP blocker.
+35. Markdown mode should use CodeMirror 6, with undo/redo routed explicitly from Electron menus into CodeMirror.
+36. Preview rendering should use `markdown-it` with GFM-aligned extensions rather than a hand-rolled renderer.
+37. The UI should use fixed native-app chrome: top app bar, command bar, toolbar, pane headers, and status bar should not scroll with document content.
 
 ## 29. Deferred Design Questions
 
