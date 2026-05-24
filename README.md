@@ -72,6 +72,8 @@ Then open `http://127.0.0.1:4173`.
 Implemented prototype features:
 
 - Markdown source editing
+- CodeMirror-based Markdown editor
+- `markdown-it` preview rendering with GFM-aligned tables, strikethrough, and task lists
 - Split source/preview mode
 - Built-in preview styles
 - Markdown toolbar actions

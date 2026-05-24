@@ -2,6 +2,8 @@ const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
+const rendererIndex = path.join(__dirname, "..", "dist", "index.html");
+
 let mainWindow = null;
 let watchedPath = null;
 let watcher = null;
@@ -23,7 +25,7 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, "..", "index.html"));
+  mainWindow.loadFile(rendererIndex);
 
   mainWindow.on("close", () => {
     if (!isQuitting) {

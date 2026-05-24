@@ -43,7 +43,54 @@ Next step:
 
 ## Open
 
+## ISSUE-004: Settings UI and sidecar schema completion
+
+Status: open
+Area: app
+Raised in: 2026-05-23
+Owner: shared
+
+Context:
+- MarkLeaf now writes a sidecar metadata file on save.
+- The sidecar currently stores a minimal style/view/export structure.
+- The MVP spec calls for settings for default mode/style, page size, margins, export defaults, and related document metadata.
+
+Question:
+- What exact MVP settings should be exposed in the first settings panel, and which should remain implicit defaults?
+
+Impact:
+- Page/export settings and document metadata remain incomplete until the settings UI and sidecar schema are finalized.
+
+Next step:
+- Define the MVP sidecar schema fields and build a compact settings panel for default view mode, selected style, page size, margins, and export defaults.
+
 ## Resolved
+
+## ISSUE-005: CodeMirror and Markdown parser foundation
+
+Status: resolved
+Area: editor
+Raised in: 2026-05-23
+Resolved in: 2026-05-23
+Owner: codex
+
+Context:
+- The first Electron prototype used a plain textarea and a hand-rolled Markdown renderer.
+- The spec calls for CodeMirror or equivalent for Markdown mode and a defined GFM-aligned Markdown profile.
+
+Question:
+- What should replace the textarea and hand-rolled renderer for the first editor foundation?
+
+Impact:
+- Editor quality, keyboard behavior, syntax support, and Markdown compatibility were limited by the initial prototype implementation.
+
+Resolution:
+- Added CodeMirror 6 for Markdown editing.
+- Added `markdown-it` with task-list support for preview rendering.
+- Added an esbuild renderer bundling step so Electron can load local packaged renderer code.
+
+Next step:
+- Extend parser/rendering tests around GFM features and evaluate whether additional Markdown plugins are needed.
 
 ## ISSUE-003: Electron scaffold migration
 

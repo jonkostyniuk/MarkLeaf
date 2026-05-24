@@ -6,12 +6,22 @@
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
-    "dev": "node scripts/start-electron.cjs",
-    "dev:web": "python3 -m http.server 4173",
+    "build:renderer": "node scripts/build-renderer.cjs",
+    "dev": "npm run build:renderer && node scripts/start-electron.cjs",
+    "dev:web": "npm run build:renderer && python3 -m http.server 4173 --directory dist",
     "test": "node --test"
   },
   "license": "MIT",
   "devDependencies": {
-    "electron": "^39.2.7"
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language": "^6.12.3",
+    "@codemirror/search": "^6.7.0",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.43.0",
+    "electron": "^39.2.7",
+    "esbuild": "^0.28.0",
+    "markdown-it": "^14.2.0",
+    "markdown-it-task-lists": "^2.1.1"
   }
 }

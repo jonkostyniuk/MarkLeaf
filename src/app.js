@@ -1,3 +1,9 @@
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { markdown as markdownLanguage } from "@codemirror/lang-markdown";
+import { bracketMatching, defaultHighlightStyle, foldGutter, syntaxHighlighting } from "@codemirror/language";
+import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import { EditorState } from "@codemirror/state";
+import { EditorView, drawSelection, highlightActiveLine, keymap, lineNumbers } from "@codemirror/view";
 import { extractHeadings, getWordCount, renderMarkdown } from "./markdown.js";
 
 const AUTOSAVE_DELAY_MS = 1200;
@@ -58,51 +64,71 @@ const state = {
 };
 
 const app = document.querySelector("#app");
+let editorView = null;
+let suppressEditorUpdate = false;
 
 app.innerHTML = `
   <main class="shell">
-    <header class="topbar">
-      <div>
-        <h1>MarkLeaf</h1>
-        <p class="subtitle">Markdown-first document editor prototype</p>
+    <header class="appbar">
+      <div class="app-identity">
+        <div class="leaf-mark" aria-hidden="true"></div>
+        <div class="title-stack">
+          <h1>MarkLeaf</h1>
+          <span id="titleFileName" class="title-file"></span>
+        </div>
       </div>
-      <div class="file-actions">
-        <button type="button" data-action="new">New</button>
-        <button type="button" data-action="open">Open</button>
+      <div class="title-status">
+        <span id="titleSaveState"></span>
+      </div>
+    </header>
+
+    <section class="commandbar" aria-label="Document commands">
+      <div class="command-group">
+        <button type="button" data-action="new" title="New document"><span aria-hidden="true">+</span> New</button>
+        <button type="button" data-action="open" title="Open Markdown file"><span aria-hidden="true">⌘</span> Open</button>
         <label class="file-fallback" id="importLabel">
           Import
           <input id="fileInput" type="file" accept=".md,.markdown,.txt,.mdown,text/markdown,text/plain">
         </label>
-        <button type="button" data-action="save">Save</button>
-        <button type="button" data-action="saveAs">Save As</button>
-        <button type="button" data-action="refresh">Refresh</button>
+        <button type="button" data-action="save" class="primary-command" title="Save document"><span aria-hidden="true">●</span> Save</button>
+        <button type="button" data-action="saveAs" title="Save document as">Save As</button>
+        <button type="button" data-action="refresh" title="Reload from disk">Refresh</button>
       </div>
-    </header>
+    </section>
 
     <section class="toolbar" aria-label="Markdown toolbar">
-      <select id="blockSelect" aria-label="Block format">
-        <option value="paragraph">Paragraph</option>
-        <option value="h1">H1</option>
-        <option value="h2">H2</option>
-        <option value="h3">H3</option>
-        <option value="blockquote">Quote</option>
-        <option value="codeblock">Code block</option>
-      </select>
-      <button type="button" data-wrap="**|**" title="Bold">B</button>
-      <button type="button" data-wrap="*|*" title="Italic">I</button>
-      <button type="button" data-wrap="~~|~~" title="Strikethrough">S</button>
-      <button type="button" data-wrap="\`|\`" title="Inline code">Code</button>
-      <button type="button" data-insert="link">Link</button>
-      <button type="button" data-insert="image">Image</button>
-      <button type="button" data-insert="ul">Bullet</button>
-      <button type="button" data-insert="ol">Numbered</button>
-      <button type="button" data-insert="task">Task</button>
-      <button type="button" data-insert="table">Table</button>
-      <button type="button" data-insert="hr">Rule</button>
-      <select id="styleSelect" aria-label="Preview style"></select>
-      <div class="mode-switch" role="group" aria-label="View mode">
-        <button type="button" data-mode="markdown">Markdown</button>
-        <button type="button" data-mode="split">Split</button>
+      <div class="tool-group">
+        <select id="blockSelect" aria-label="Block format">
+          <option value="paragraph">Paragraph</option>
+          <option value="h1">H1</option>
+          <option value="h2">H2</option>
+          <option value="h3">H3</option>
+          <option value="blockquote">Quote</option>
+          <option value="codeblock">Code block</option>
+        </select>
+      </div>
+      <div class="tool-group">
+        <button type="button" data-wrap="**|**" title="Bold"><strong>B</strong></button>
+        <button type="button" data-wrap="*|*" title="Italic"><em>I</em></button>
+        <button type="button" data-wrap="~~|~~" title="Strikethrough"><span class="strike">S</span></button>
+        <button type="button" data-wrap="\`|\`" title="Inline code">Code</button>
+      </div>
+      <div class="tool-group">
+        <button type="button" data-insert="link" title="Insert link">Link</button>
+        <button type="button" data-insert="image" title="Insert image">Image</button>
+        <button type="button" data-insert="ul" title="Bullet list">• List</button>
+        <button type="button" data-insert="ol" title="Numbered list">1. List</button>
+        <button type="button" data-insert="task" title="Task list">☐ Task</button>
+        <button type="button" data-insert="table" title="Insert table">Table</button>
+        <button type="button" data-insert="hr" title="Horizontal rule">Rule</button>
+      </div>
+      <div class="tool-spacer"></div>
+      <div class="tool-group">
+        <select id="styleSelect" aria-label="Preview style"></select>
+        <div class="mode-switch" role="group" aria-label="View mode">
+          <button type="button" data-mode="markdown">Markdown</button>
+          <button type="button" data-mode="split">Split</button>
+        </div>
       </div>
     </section>
 
@@ -114,7 +140,7 @@ app.innerHTML = `
 
     <section class="workspace">
       <aside class="sidebar">
-        <section>
+        <section class="sidebar-panel">
           <h2>Document</h2>
           <dl class="document-meta">
             <dt>File</dt>
@@ -127,19 +153,29 @@ app.innerHTML = `
             <dd id="characterCount"></dd>
           </dl>
         </section>
-        <section>
+        <section class="sidebar-panel">
           <h2>Outline</h2>
           <nav id="outline" class="outline"></nav>
         </section>
-        <section>
+        <section class="sidebar-panel">
           <h2>Recent</h2>
           <ul id="recentFiles" class="recent-files"></ul>
         </section>
       </aside>
 
       <section id="editorRegion" class="editor-region">
-        <textarea id="editor" spellcheck="true" aria-label="Markdown source"></textarea>
-        <article id="preview" class="preview document" aria-label="Rendered preview"></article>
+        <section class="pane source-pane">
+          <header class="pane-header">
+            <span>Markdown</span>
+          </header>
+          <div id="editor" class="cm-host" aria-label="Markdown source"></div>
+        </section>
+        <section class="pane preview-pane">
+          <header class="pane-header">
+            <span>Preview</span>
+          </header>
+          <article id="preview" class="preview document" aria-label="Rendered preview"></article>
+        </section>
       </section>
     </section>
 
@@ -168,26 +204,50 @@ const modeStatus = document.querySelector("#modeStatus");
 const watchStatus = document.querySelector("#watchStatus");
 const fileInput = document.querySelector("#fileInput");
 const importLabel = document.querySelector("#importLabel");
+const titleFileName = document.querySelector("#titleFileName");
+const titleSaveState = document.querySelector("#titleSaveState");
 
 initialize();
 
 function initialize() {
   populateStyleSelect();
-  editor.value = state.markdown;
+  initializeEditor();
   bindEvents();
   bindDesktopEvents();
   render();
 }
 
-function bindEvents() {
-  editor.addEventListener("input", () => {
-    state.markdown = editor.value;
-    state.dirty = true;
-    state.saveError = "";
-    scheduleAutoSave();
-    render();
+function initializeEditor() {
+  editorView = new EditorView({
+    parent: editor,
+    state: EditorState.create({
+      doc: state.markdown,
+      extensions: [
+        lineNumbers(),
+        foldGutter(),
+        history(),
+        drawSelection(),
+        highlightActiveLine(),
+        bracketMatching(),
+        highlightSelectionMatches(),
+        markdownLanguage(),
+        syntaxHighlighting(defaultHighlightStyle),
+        keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+        EditorView.lineWrapping,
+        EditorView.updateListener.of((update) => {
+          if (!update.docChanged || suppressEditorUpdate) return;
+          state.markdown = getEditorText();
+          state.dirty = true;
+          state.saveError = "";
+          scheduleAutoSave();
+          render();
+        })
+      ]
+    })
   });
+}
 
+function bindEvents() {
   app.addEventListener("click", (event) => {
     const target = event.target.closest("button");
     if (!target) return;
@@ -255,8 +315,8 @@ function populateStyleSelect() {
 }
 
 function render() {
-  if (editor.value !== state.markdown) {
-    editor.value = state.markdown;
+  if (getEditorText() !== state.markdown) {
+    setEditorText(state.markdown);
   }
   preview.innerHTML = renderMarkdown(state.markdown);
   preview.className = `preview document ${styles[state.selectedStyle].className}`;
@@ -265,6 +325,8 @@ function render() {
 
   fileName.textContent = state.fileName;
   saveState.textContent = getSaveStateLabel();
+  titleFileName.textContent = state.fileName;
+  titleSaveState.textContent = getSaveStateLabel();
   wordCount.textContent = String(getWordCount(state.markdown));
   characterCount.textContent = String(state.markdown.length);
   pathStatus.textContent = getPathStatus();
@@ -405,7 +467,7 @@ async function openFileHandle(handle) {
   state.dirty = false;
   state.saveError = "";
   state.externalChange = false;
-  editor.value = state.markdown;
+  setEditorText(state.markdown);
   addRecentFile(file.name);
   startWatching();
   render();
@@ -420,7 +482,7 @@ async function openImportedFile(file) {
   state.dirty = false;
   state.saveError = "";
   state.externalChange = false;
-  editor.value = state.markdown;
+  setEditorText(state.markdown);
   addRecentFile(file.name);
   stopWatching();
   render();
@@ -468,7 +530,7 @@ async function refreshFromDisk(force = false) {
   state.dirty = false;
   state.saveError = "";
   state.externalChange = false;
-  editor.value = state.markdown;
+  setEditorText(state.markdown);
   render();
 }
 
@@ -485,7 +547,7 @@ function startWatching() {
         } else {
           state.markdown = await file.text();
           state.lastModified = file.lastModified;
-          editor.value = state.markdown;
+          setEditorText(state.markdown);
           render();
         }
       }
@@ -575,7 +637,7 @@ function applyOpenedDocument(result) {
   state.saving = false;
   state.saveError = "";
   state.externalChange = false;
-  editor.value = state.markdown;
+  setEditorText(state.markdown);
   addRecentFile(state.fileName);
   if (!isElectron) startWatching();
   render();
@@ -610,8 +672,7 @@ function getWatchStatus() {
 
 function wrapSelection(pattern) {
   const [before, after] = pattern.split("|");
-  const start = editor.selectionStart;
-  const end = editor.selectionEnd;
+  const { start, end } = getSelectionRange();
   const selected = state.markdown.slice(start, end) || "text";
   replaceSelection(`${before}${selected}${after}`, start, end);
 }
@@ -626,7 +687,8 @@ function insertMarkdown(type) {
     table: "| Column A | Column B |\n| --- | --- |\n| Value | Value |",
     hr: "\n---\n"
   };
-  replaceSelection(inserts[type] || "", editor.selectionStart, editor.selectionEnd);
+  const { start, end } = getSelectionRange();
+  replaceSelection(inserts[type] || "", start, end);
 }
 
 function applyBlockFormat(format) {
@@ -645,7 +707,7 @@ function applyBlockFormat(format) {
 }
 
 function getCurrentLineRange() {
-  const cursor = editor.selectionStart;
+  const cursor = getSelectionRange().start;
   const before = state.markdown.lastIndexOf("\n", cursor - 1);
   const after = state.markdown.indexOf("\n", cursor);
   return {
@@ -656,9 +718,9 @@ function getCurrentLineRange() {
 
 function replaceSelection(value, start, end) {
   state.markdown = `${state.markdown.slice(0, start)}${value}${state.markdown.slice(end)}`;
-  editor.value = state.markdown;
-  editor.focus();
-  editor.setSelectionRange(start, start + value.length);
+  setEditorText(state.markdown);
+  setSelectionRange(start, start + value.length);
+  editorView.focus();
   state.dirty = true;
   state.saveError = "";
   scheduleAutoSave();
@@ -668,8 +730,43 @@ function replaceSelection(value, start, end) {
 function jumpToLine(lineNumber) {
   const lines = state.markdown.split("\n");
   const position = lines.slice(0, Math.max(0, lineNumber - 1)).join("\n").length + (lineNumber > 1 ? 1 : 0);
-  editor.focus();
-  editor.setSelectionRange(position, position);
+  setSelectionRange(position, position);
+  editorView.focus();
+}
+
+function getEditorText() {
+  return editorView?.state.doc.toString() || "";
+}
+
+function setEditorText(value) {
+  if (!editorView) return;
+  suppressEditorUpdate = true;
+  editorView.dispatch({
+    changes: {
+      from: 0,
+      to: editorView.state.doc.length,
+      insert: value
+    }
+  });
+  suppressEditorUpdate = false;
+}
+
+function getSelectionRange() {
+  const range = editorView.state.selection.main;
+  return {
+    start: Math.min(range.from, range.to),
+    end: Math.max(range.from, range.to)
+  };
+}
+
+function setSelectionRange(start, end) {
+  editorView.dispatch({
+    selection: {
+      anchor: start,
+      head: end
+    },
+    scrollIntoView: true
+  });
 }
 
 function addRecentFile(name) {

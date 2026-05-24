@@ -589,6 +589,21 @@ The toolbar should feel familiar to Word users but should remain honest about Ma
 
 ## 12. CSS Style System
 
+### 12.0 Visual Identity Palette
+
+MarkLeaf should use a restrained, document-focused colour palette that supports a professional local-first editor experience.
+
+| Role | Colour | Use |
+| --- | ---: | --- |
+| Primary green | `#2F6F5E` | Leaf mark, primary buttons, active states |
+| Deep ink | `#1F2933` | Text, outlines, dark UI anchors |
+| Soft mint | `#DDEFE8` | Light backgrounds, icon fill accents |
+| Paper white | `#FAFAF7` | App background / document feel |
+| Muted slate | `#6B7280` | Secondary UI text |
+| Optional accent | `#D99A3D` | Small highlight only, e.g. save state / export badge |
+
+The optional accent should be used sparingly. The app should remain quiet and document-oriented rather than visually loud.
+
 ### 12.1 Style Library
 
 The app should ship with a small set of predefined plain CSS files for common document types.
