@@ -1181,6 +1181,13 @@ The app should support native builds for:
 - Windows installer
 - Linux AppImage, `.deb`, or equivalent
 
+Current alpha packaging baseline:
+
+- `make package-mac` builds an unsigned local macOS `.app` with Electron Builder.
+- The output is written under `release/`, currently `release/mac-arm64/MarkLeaf.app` on Apple Silicon.
+- The macOS `.app` icon is generated from `assets/brand/markleaf-logo-concept-1.png` into `build/icons/markleaf.icns` during packaging.
+- DMG packaging, code signing, notarization, and final production icon treatment are deferred until broader beta distribution.
+
 Open source distribution should include:
 
 - Source repository.
@@ -1422,6 +1429,8 @@ The following decisions are assumed based on current user direction:
 47. Link insertion should use a dialog with display text plus explicit Address/Email modes; rendered web and email links should open through the operating system rather than navigating the Electron app window.
 48. Image insertion should use a dialog, support one pending image at a time, require a saved Markdown file first, show a removable temporary thumbnail, and copy inserted images into `[filename].md.assets/`.
 49. Existing link/image references can be inserted through dialogs now, but edit-existing-reference workflows remain deferred.
+50. Local alpha testing should use `make package-mac` to produce an unsigned `.app`; DMG, signing, notarization, and final production icon treatment remain follow-up packaging work.
+51. The alpha macOS `.app` should use an `.icns` generated from the current PNG logo concept so standalone builds are identifiable in Finder and the Dock.
 
 ## 29. Deferred Design Questions
 

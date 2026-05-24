@@ -43,6 +43,27 @@ Next step:
 
 ## Open
 
+## ISSUE-016: Signed and notarized macOS packaging
+
+Status: open
+Area: packaging
+Raised in: 2026-05-24
+Owner: shared
+
+Context:
+- MarkLeaf now has a local unsigned macOS `.app` packaging command for alpha testing.
+- The local alpha `.app` uses an `.icns` generated from the current PNG logo concept.
+- macOS distribution outside local development will eventually need final production icons, signing, notarization, and likely DMG packaging.
+
+Question:
+- What packaging identity, final icon set, and release format should MarkLeaf use for broader macOS beta distribution?
+
+Impact:
+- Unsigned local `.app` builds are useful for personal testing but may trigger macOS warnings and are not suitable as a polished public beta.
+
+Next step:
+- Decide when to replace the concept icon with final production app icons and configure Developer ID signing, notarization, and DMG generation.
+
 ## ISSUE-004: Settings UI and sidecar schema completion
 
 Status: open

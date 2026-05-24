@@ -7,10 +7,32 @@
   "main": "electron/main.cjs",
   "scripts": {
     "build:renderer": "node scripts/build-renderer.cjs",
+    "build:mac-icon": "node scripts/build-mac-icon.cjs",
     "dev": "npm run build:renderer && node scripts/start-electron.cjs",
+    "package:mac": "npm run build:renderer && npm run build:mac-icon && electron-builder --mac dir",
     "test": "node --test"
   },
   "license": "MIT",
+  "build": {
+    "appId": "com.markleaf.app",
+    "productName": "MarkLeaf",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "package.json",
+      "dist/**/*",
+      "electron/**/*",
+      "assets/brand/**/*"
+    ],
+    "mac": {
+      "target": [
+        "dir"
+      ],
+      "icon": "build/icons/markleaf.icns",
+      "identity": null
+    }
+  },
   "devDependencies": {
     "@codemirror/commands": "^6.10.3",
     "@codemirror/lang-markdown": "^6.5.0",
@@ -19,6 +41,7 @@
     "@codemirror/state": "^6.6.0",
     "@codemirror/view": "^6.43.0",
     "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
     "esbuild": "^0.28.0",
     "markdown-it": "^14.2.0",
     "markdown-it-task-lists": "^2.1.1"
