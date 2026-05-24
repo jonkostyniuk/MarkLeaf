@@ -35,7 +35,6 @@ body {
 
 button,
 select,
-textarea,
 input {
   font: inherit;
 }
@@ -50,6 +49,82 @@ select,
   color: var(--text);
   padding: 0 8px;
   font-size: 12px;
+}
+
+.icon-button {
+  position: relative;
+  width: 30px;
+  min-width: 30px;
+  height: 28px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+}
+
+.lucide-icon {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.italic-icon,
+.text-icon {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.italic-icon {
+  font-style: italic;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  z-index: 40;
+  min-width: max-content;
+  max-width: 220px;
+  transform: translateX(-50%) translateY(-2px);
+  padding: 5px 7px;
+  border-radius: 4px;
+  background: var(--deep-ink);
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+  box-shadow: 0 6px 16px rgba(31, 41, 51, 0.18);
+}
+
+[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 3px);
+  z-index: 41;
+  width: 8px;
+  height: 8px;
+  background: var(--deep-ink);
+  transform: translateX(-50%) rotate(45deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after,
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::before {
+  opacity: 1;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+  transform: translateX(-50%) translateY(0);
 }
 
 button {
@@ -94,6 +169,10 @@ button.active {
   -webkit-app-region: drag;
 }
 
+.platform-darwin .appbar {
+  padding-left: 92px;
+}
+
 .app-identity {
   display: flex;
   align-items: center;
@@ -101,13 +180,13 @@ button.active {
   min-width: 0;
 }
 
-.leaf-mark {
-  width: 18px;
-  height: 18px;
-  border-radius: 70% 10% 70% 10%;
-  background: var(--primary-green);
-  transform: rotate(-18deg);
-  box-shadow: inset -4px -4px 0 rgba(255, 255, 255, 0.22);
+.app-logo {
+  width: 24px;
+  height: 24px;
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  object-fit: contain;
 }
 
 .title-stack {
@@ -507,9 +586,9 @@ h1 {
   gap: 16px;
   min-height: 24px;
   padding: 0 10px;
-  background: var(--deep-ink);
+  background: var(--chrome);
   border-top: 1px solid var(--line);
-  color: #d8e0dd;
+  color: var(--muted-slate);
   font-size: 11px;
   overflow: hidden;
 }

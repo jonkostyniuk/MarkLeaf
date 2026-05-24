@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">MarkLeaf app icon concept</title>
+  <desc id="desc">Flat vector app icon showing a Markdown document with a folded paper corner.</desc>
+
+  <defs>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#10231F" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- App tile -->
+  <rect x="0" y="0" width="1024" height="1024" rx="180" fill="#FAFAF7"/>
+
+  <!-- Main document outline -->
+  <path
+    d="M322 158
+       H696
+       Q760 158 806 204
+       Q852 250 852 314
+       V656
+       Q852 684 832 704
+       L682 854
+       H322
+       Q262 854 220 812
+       Q178 770 178 710
+       V302
+       Q178 242 220 200
+       Q262 158 322 158 Z"
+    fill="#FFFFFF"
+    stroke="#0F5B3C"
+    stroke-width="34"
+    stroke-linejoin="round"
+    filter="url(#softShadow)"
+  />
+
+  <!-- Mask/fill to simplify lower-right paper body -->
+  <path
+    d="M700 846
+       L846 700
+       V657
+       Q846 681 828 699
+       L699 828 Z"
+    fill="#0F5B3C"
+  />
+
+  <!-- Fold cut/face -->
+  <path
+    d="M708 810
+       V700
+       Q708 664 734 638
+       Q760 612 796 612
+       H835
+       Z"
+    fill="#8ED1A7"
+    stroke="#0F5B3C"
+    stroke-width="28"
+    stroke-linejoin="round"
+  />
+
+  <!-- Restore inner document bottom/side edge impression -->
+  <path
+    d="M322 174
+       H696
+       Q754 174 795 215
+       Q836 256 836 314
+       V614"
+    fill="none"
+    stroke="#0F5B3C"
+    stroke-width="34"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <path
+    d="M194 302
+       V710
+       Q194 764 232 802
+       Q270 840 322 840
+       H682"
+    fill="none"
+    stroke="#0F5B3C"
+    stroke-width="34"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Markdown hash mark -->
+  <g fill="none" stroke="#17232B" stroke-width="30" stroke-linecap="round">
+    <line x1="364" y1="288" x2="334" y2="424"/>
+    <line x1="436" y1="288" x2="406" y2="424"/>
+    <line x1="310" y1="340" x2="472" y2="340"/>
+    <line x1="298" y1="394" x2="460" y2="394"/>
+  </g>
+
+  <!-- Left content panel -->
+  <rect x="300" y="486" width="192" height="260" rx="18" fill="#DDEFE8" opacity="0.48"/>
+  <rect x="326" y="548" width="128" height="18" rx="9" fill="#17232B"/>
+  <rect x="326" y="612" width="98" height="18" rx="9" fill="#61BE83"/>
+  <rect x="326" y="674" width="84" height="18" rx="9" fill="#61BE83"/>
+
+  <!-- Divider -->
+  <rect x="530" y="486" width="8" height="260" rx="4" fill="#61BE83"/>
+
+  <!-- Right content panel -->
+  <rect x="576" y="486" width="150" height="260" rx="18" fill="#DDEFE8" opacity="0.48"/>
+  <rect x="606" y="548" width="98" height="18" rx="9" fill="#17232B"/>
+  <rect x="606" y="612" width="98" height="18" rx="9" fill="#17232B"/>
+</svg>

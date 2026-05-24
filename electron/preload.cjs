@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("markleaf", {
   platform: "electron",
+  os: process.platform,
   newDocument: () => ipcRenderer.invoke("document:new"),
   openDocument: () => ipcRenderer.invoke("document:open"),
   saveDocument: (payload) => ipcRenderer.invoke("document:save", payload),

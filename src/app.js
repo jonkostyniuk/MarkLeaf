@@ -4,6 +4,24 @@ import { bracketMatching, defaultHighlightStyle, foldGutter, syntaxHighlighting 
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { EditorState } from "@codemirror/state";
 import { EditorView, drawSelection, highlightActiveLine, keymap, lineNumbers } from "@codemirror/view";
+import {
+  Bold,
+  Code,
+  Columns2,
+  FilePlus,
+  FolderOpen,
+  Image,
+  Link,
+  List,
+  ListOrdered,
+  ListTodo,
+  Minus,
+  RefreshCw,
+  Save,
+  SaveAll,
+  Strikethrough,
+  Table
+} from "lucide";
 import { extractHeadings, getWordCount, renderMarkdown } from "./markdown.js";
 
 const AUTOSAVE_DELAY_MS = 1200;
@@ -28,7 +46,7 @@ Write Markdown on the left and preview the styled document on the right.
 | --- | --- |
 | Markdown editor | Ready |
 | Preview | Ready |
-| Electron shell | Pending |
+| Electron shell | Ready |
 `;
 
 const styles = {
@@ -67,11 +85,24 @@ const app = document.querySelector("#app");
 let editorView = null;
 let suppressEditorUpdate = false;
 
+function icon(nodes) {
+  const paths = nodes
+    .map(([tag, attrs]) => {
+      const attributes = Object.entries(attrs)
+        .map(([key, value]) => `${key}="${String(value)}"`)
+        .join(" ");
+      return `<${tag} ${attributes}></${tag}>`;
+    })
+    .join("");
+
+  return `<svg class="lucide-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+}
+
 app.innerHTML = `
   <main class="shell">
     <header class="appbar">
       <div class="app-identity">
-        <div class="leaf-mark" aria-hidden="true"></div>
+        <img class="app-logo" src="../assets/brand/markleaf-logo-concept-1.png" alt="" aria-hidden="true">
         <div class="title-stack">
           <h1>MarkLeaf</h1>
           <span id="titleFileName" class="title-file"></span>
@@ -84,15 +115,15 @@ app.innerHTML = `
 
     <section class="commandbar" aria-label="Document commands">
       <div class="command-group">
-        <button type="button" data-action="new" title="New document"><span aria-hidden="true">+</span> New</button>
-        <button type="button" data-action="open" title="Open Markdown file"><span aria-hidden="true">⌘</span> Open</button>
+        <button type="button" data-action="new" class="icon-button" aria-label="New document" data-tooltip="New document">${icon(FilePlus)}</button>
+        <button type="button" data-action="open" class="icon-button" aria-label="Open Markdown file" data-tooltip="Open Markdown file">${icon(FolderOpen)}</button>
         <label class="file-fallback" id="importLabel">
           Import
           <input id="fileInput" type="file" accept=".md,.markdown,.txt,.mdown,text/markdown,text/plain">
         </label>
-        <button type="button" data-action="save" class="primary-command" title="Save document"><span aria-hidden="true">●</span> Save</button>
-        <button type="button" data-action="saveAs" title="Save document as">Save As</button>
-        <button type="button" data-action="refresh" title="Reload from disk">Refresh</button>
+        <button type="button" data-action="save" class="icon-button primary-command" aria-label="Save document" data-tooltip="Save document">${icon(Save)}</button>
+        <button type="button" data-action="saveAs" class="icon-button" aria-label="Save document as" data-tooltip="Save document as">${icon(SaveAll)}</button>
+        <button type="button" data-action="refresh" class="icon-button" aria-label="Reload from disk" data-tooltip="Reload from disk">${icon(RefreshCw)}</button>
       </div>
     </section>
 
@@ -108,26 +139,26 @@ app.innerHTML = `
         </select>
       </div>
       <div class="tool-group">
-        <button type="button" data-wrap="**|**" title="Bold"><strong>B</strong></button>
-        <button type="button" data-wrap="*|*" title="Italic"><em>I</em></button>
-        <button type="button" data-wrap="~~|~~" title="Strikethrough"><span class="strike">S</span></button>
-        <button type="button" data-wrap="\`|\`" title="Inline code">Code</button>
+        <button type="button" data-wrap="**|**" class="icon-button" aria-label="Bold" data-tooltip="Bold">${icon(Bold)}</button>
+        <button type="button" data-wrap="*|*" class="icon-button italic-icon" aria-label="Italic" data-tooltip="Italic">I</button>
+        <button type="button" data-wrap="~~|~~" class="icon-button" aria-label="Strikethrough" data-tooltip="Strikethrough">${icon(Strikethrough)}</button>
+        <button type="button" data-wrap="\`|\`" class="icon-button" aria-label="Inline code" data-tooltip="Inline code">${icon(Code)}</button>
       </div>
       <div class="tool-group">
-        <button type="button" data-insert="link" title="Insert link">Link</button>
-        <button type="button" data-insert="image" title="Insert image">Image</button>
-        <button type="button" data-insert="ul" title="Bullet list">• List</button>
-        <button type="button" data-insert="ol" title="Numbered list">1. List</button>
-        <button type="button" data-insert="task" title="Task list">☐ Task</button>
-        <button type="button" data-insert="table" title="Insert table">Table</button>
-        <button type="button" data-insert="hr" title="Horizontal rule">Rule</button>
+        <button type="button" data-insert="link" class="icon-button" aria-label="Insert link" data-tooltip="Insert link">${icon(Link)}</button>
+        <button type="button" data-insert="image" class="icon-button" aria-label="Insert image" data-tooltip="Insert image">${icon(Image)}</button>
+        <button type="button" data-insert="ul" class="icon-button" aria-label="Bullet list" data-tooltip="Bullet list">${icon(List)}</button>
+        <button type="button" data-insert="ol" class="icon-button" aria-label="Numbered list" data-tooltip="Numbered list">${icon(ListOrdered)}</button>
+        <button type="button" data-insert="task" class="icon-button" aria-label="Task list" data-tooltip="Task list">${icon(ListTodo)}</button>
+        <button type="button" data-insert="table" class="icon-button" aria-label="Insert table" data-tooltip="Insert table">${icon(Table)}</button>
+        <button type="button" data-insert="hr" class="icon-button" aria-label="Horizontal rule" data-tooltip="Horizontal rule">${icon(Minus)}</button>
       </div>
       <div class="tool-spacer"></div>
       <div class="tool-group">
         <select id="styleSelect" aria-label="Preview style"></select>
         <div class="mode-switch" role="group" aria-label="View mode">
-          <button type="button" data-mode="markdown">Markdown</button>
-          <button type="button" data-mode="split">Split</button>
+          <button type="button" data-mode="markdown" class="icon-button text-icon" aria-label="Markdown mode" data-tooltip="Markdown mode">MD</button>
+          <button type="button" data-mode="split" class="icon-button" aria-label="Split mode" data-tooltip="Split mode">${icon(Columns2)}</button>
         </div>
       </div>
     </section>
@@ -210,6 +241,7 @@ const titleSaveState = document.querySelector("#titleSaveState");
 initialize();
 
 function initialize() {
+  document.body.classList.toggle("platform-darwin", desktopApi?.os === "darwin");
   populateStyleSelect();
   initializeEditor();
   bindEvents();

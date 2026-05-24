@@ -613,6 +613,30 @@ MarkLeaf should use a restrained, document-focused colour palette that supports 
 
 The optional accent should be used sparingly. The app should remain quiet and document-oriented rather than visually loud.
 
+### 12.0.1 Brand Assets
+
+Brand and logo source files should live under:
+
+```text
+assets/brand/
+```
+
+This folder is the source of truth for working logo and brand artwork. Generated build output such as `dist/` must not be treated as a second source asset location. During local development, renderer output should reference source brand assets rather than copying logo files into `dist/`.
+
+The current working logo asset is:
+
+```text
+assets/brand/markleaf-logo-concept-1.png
+```
+
+The matching vector concept asset is:
+
+```text
+assets/brand/markleaf-logo-concept-1.svg
+```
+
+Packaging-specific application icons may be added later under a clearly named packaging resource folder, such as `assets/app-icons/` or `build/icons/`. They should not be mixed into `dist/` as source assets.
+
 ### 12.1 Style Library
 
 The app should ship with a small set of predefined plain CSS files for common document types.
@@ -995,6 +1019,17 @@ Suggested layout:
 
 The top app bar, command bar, toolbar, and status bar should remain fixed. Scrolling should be contained inside the sidebar, source editor, and preview panes. The app should present as a desktop productivity tool, taking practical UX cues from VS Code's editor density and Word's document command surface, rather than as a web page.
 
+### 18.1.1 Iconography
+
+MarkLeaf should use **Lucide** as the default application icon set for toolbar, command bar, status, and utility icons.
+
+Guidelines:
+
+- Use icon-only buttons for familiar commands such as new, open, save, refresh, formatting, lists, links, images, tables, and split view.
+- Every icon-only button must have an accessible label and a hover/focus tooltip that names the action.
+- Avoid mixing icon packs unless a needed concept is unavailable in Lucide.
+- Keep icons visually restrained: line icons, consistent stroke weight, and no decorative icon colours unless communicating state.
+
 ### 18.2 Status Bar
 
 Status bar may include:
@@ -1325,6 +1360,9 @@ The following decisions are assumed based on current user direction:
 35. Markdown mode should use CodeMirror 6, with undo/redo routed explicitly from Electron menus into CodeMirror.
 36. Preview rendering should use `markdown-it` with GFM-aligned extensions rather than a hand-rolled renderer.
 37. The UI should use fixed native-app chrome: top app bar, command bar, toolbar, pane headers, and status bar should not scroll with document content.
+38. Lucide should be the default icon system for app command and toolbar icons, with accessible labels and hover/focus tooltips on icon-only buttons.
+39. Brand/logo source files should live only under `assets/brand/`; generated `dist/` files are runtime build output and not source assets.
+40. Common project commands should be exposed through the root `Makefile` so development, browser fallback, checks, and cleanup stay consistent.
 
 ## 29. Deferred Design Questions
 

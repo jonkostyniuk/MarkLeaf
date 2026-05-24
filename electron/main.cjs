@@ -17,6 +17,8 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     title: "MarkLeaf",
+    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
+    trafficLightPosition: process.platform === "darwin" ? { x: 14, y: 11 } : undefined,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,

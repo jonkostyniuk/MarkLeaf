@@ -34,7 +34,7 @@ The current technical direction is:
 - TypeScript frontend logic
 - Node.js main process for file access, file watching, native menus, packaging, and export orchestration
 - CodeMirror 6 for raw Markdown editing
-- GitHub Flavoured Markdown as the initial Markdown baseline
+- `markdown-it` preview rendering with a GitHub Flavoured Markdown-aligned baseline
 
 Export quality is a major early risk. Pandoc is one candidate for DOCX/PDF export, but MarkLeaf should also evaluate other approaches before committing to a final pipeline.
 
@@ -53,21 +53,27 @@ The full product goal includes a direct editable Word-lite mode where Markdown s
 
 ## Current Prototype
 
-This repository currently includes a dependency-free browser prototype for the Phase 1/2 editor workflow. It is not yet the final Electron desktop application.
+This repository currently includes the first-pass Electron app for the Phase 1/2 editor workflow. It is still an MVP prototype, not a packaged production desktop app.
 
 Run the Electron app locally with:
 
 ```sh
-npm run dev
+make dev
 ```
 
 Run the browser fallback prototype with:
 
 ```sh
-npm run dev:web
+make web
 ```
 
-Then open `http://127.0.0.1:4173`.
+Then open `http://127.0.0.1:4173/dist/`.
+
+Run the current verification pass with:
+
+```sh
+make check
+```
 
 Implemented prototype features:
 
@@ -76,7 +82,7 @@ Implemented prototype features:
 - `markdown-it` preview rendering with GFM-aligned tables, strikethrough, and task lists
 - Split source/preview mode
 - Built-in preview styles
-- Markdown toolbar actions
+- Markdown toolbar actions using Lucide icon buttons with hover/focus tooltips
 - Word and character counts
 - Heading outline
 - Recent file labels
@@ -84,6 +90,7 @@ Implemented prototype features:
 - Sidecar metadata creation on save
 - Native file watching through the Electron main process
 - Manual refresh and external-change warnings
+- Fixed native-app chrome with non-scrolling app bar, command bar, toolbar, pane headers, and status bar
 - Browser fallback import/download behavior when not running in Electron
 
 Known implementation gaps are tracked in [ISSUES.md](ISSUES.md).
@@ -93,6 +100,25 @@ Known implementation gaps are tracked in [ISSUES.md](ISSUES.md).
 - [markleaf-spec.md](markleaf-spec.md): product direction, technical architecture, development phases, design principles, and MVP scope.
 - [ISSUES.md](ISSUES.md): running backlog for unresolved questions, implementation blockers, follow-up decisions, and resolved project notes.
 - [LICENSE](LICENSE): MIT License for the project.
+
+## Common Commands
+
+Use `make help` for the maintained command list. The most common commands are:
+
+- `make install`: install Node dependencies.
+- `make build`: build the renderer into `dist/`.
+- `make dev`: build and launch the Electron desktop app.
+- `make web`: build and serve the browser fallback.
+- `make check`: run tests and Electron syntax checks.
+- `make clean`: remove generated build output.
+
+## Assets
+
+Brand and logo source files live in [assets/brand](assets/brand). This is the source-of-truth location for logo assets.
+
+Generated output lives in `dist/` and should not be edited or reviewed as source. During local development, the built renderer references source assets from `assets/brand/` rather than copying logos into `dist/`.
+
+Example Markdown files live in [examples](examples). These should remain clean source examples; sidecar `.meta.json` files may be generated while testing but should not be treated as canonical examples unless intentionally added.
 
 ## License
 

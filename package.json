@@ -8,7 +8,7 @@
   "scripts": {
     "build:renderer": "node scripts/build-renderer.cjs",
     "dev": "npm run build:renderer && node scripts/start-electron.cjs",
-    "dev:web": "npm run build:renderer && python3 -m http.server 4173 --directory dist",
+    "dev:web": "npm run build:renderer && python3 -m http.server 4173",
     "test": "node --test"
   },
   "license": "MIT",
@@ -23,5 +23,8 @@
     "esbuild": "^0.28.0",
     "markdown-it": "^14.2.0",
     "markdown-it-task-lists": "^2.1.1"
+  },
+  "dependencies": {
+    "lucide": "^1.16.0"
   }
 }

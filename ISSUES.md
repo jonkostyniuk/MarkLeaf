@@ -66,6 +66,62 @@ Next step:
 
 ## Resolved
 
+## ISSUE-009: Brand asset source-of-truth location
+
+Status: resolved
+Area: docs
+Raised in: 2026-05-24
+Resolved in: 2026-05-24
+Owner: shared
+
+Context:
+- Logo assets were being copied into generated `dist/` output during renderer builds.
+- This made it look like there were multiple logo locations.
+
+Question:
+- Where should source logo assets live?
+
+Impact:
+- Multiple apparent asset locations increase the chance of editing or reviewing generated output by mistake.
+
+Resolution:
+- Standardized brand source assets under `assets/brand/`.
+- Documented that `dist/` is generated output only.
+- Updated the renderer build to avoid copying logo assets into `dist/` during development.
+- Removed generated logo copies from `dist/` during cleanup.
+- Confirmed the only source image/vector assets are `assets/brand/markleaf-logo-concept-1.png` and `assets/brand/markleaf-logo-concept-1.svg`.
+
+Next step:
+- Add packaging-specific icons later under a separate intentional location such as `assets/app-icons/` or `build/icons/`.
+
+## ISSUE-008: Lucide icon system
+
+Status: resolved
+Area: app
+Raised in: 2026-05-24
+Resolved in: 2026-05-24
+Owner: shared
+
+Context:
+- The command bar and toolbar initially used text labels and ad hoc symbols.
+- MarkLeaf needed a consistent app icon system.
+
+Question:
+- Which icon pack should MarkLeaf use for command and toolbar actions?
+
+Impact:
+- Mixed symbols and labels made the toolbar feel less native and less coherent.
+
+Resolution:
+- Selected Lucide as the default icon system.
+- Added Lucide as a dependency.
+- Replaced command/toolbar actions with Lucide icon buttons where appropriate.
+- Added accessible labels and hover/focus tooltips for icon-only buttons.
+- Documented Lucide usage in the spec.
+
+Next step:
+- Continue replacing future command icons with Lucide unless a required concept is unavailable.
+
 ## ISSUE-007: Native app chrome and fixed pane layout
 
 Status: resolved
@@ -152,7 +208,7 @@ Resolved in: 2026-05-23
 Owner: shared
 
 Context:
-- The current implementation is a dependency-free browser prototype.
+- The first implementation began as a dependency-free browser prototype.
 - The target implementation is an Electron/TypeScript desktop app.
 
 Question:
