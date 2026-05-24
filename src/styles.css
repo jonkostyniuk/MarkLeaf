@@ -184,6 +184,10 @@ button.active {
   color: #ffffff;
 }
 
+.secondary-action {
+  justify-self: start;
+}
+
 .shell {
   height: 100vh;
   min-height: 0;
@@ -872,6 +876,34 @@ h1 {
 .form-field input:focus {
   border-color: var(--accent);
   outline: 2px solid rgba(47, 111, 94, 0.18);
+}
+
+.drop-zone {
+  display: grid;
+  place-items: center;
+  min-height: 86px;
+  border: 1px dashed #9fb2ac;
+  border-radius: 6px;
+  background: var(--chrome);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.drop-zone.drag-over,
+.drop-zone:focus-visible {
+  border-color: var(--accent);
+  background: var(--soft-mint);
+  color: var(--deep-ink);
+  outline: none;
+}
+
+.field-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
 }
 
 .modal-actions {

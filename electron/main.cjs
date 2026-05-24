@@ -4,6 +4,7 @@ const path = require("node:path");
 
 const rendererIndex = path.join(__dirname, "..", "dist", "index.html");
 const OWN_WRITE_SUPPRESSION_MS = 1500;
+const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]);
 
 let mainWindow = null;
 let watchedPath = null;
@@ -188,6 +189,30 @@ ipcMain.handle("link:openExternal", async (_event, url) => {
   return openAllowedExternalUrl(url);
 });
 
+ipcMain.handle("image:choose", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Choose Image",
+    properties: ["openFile"],
+    filters: [
+      { name: "Images", extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg"] }
+    ]
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return { ok: false, canceled: true };
+  }
+
+  return { ok: true, filePath: result.filePaths[0] };
+});
+
+ipcMain.handle("image:prepare", async (_event, payload) => {
+  try {
+    return await prepareImageAsset(payload);
+  } catch (error) {
+    return { ok: false, error: error.message || "Unable to prepare image." };
+  }
+});
+
 ipcMain.handle("dialog:confirmOpenRecent", async (_event, payload) => {
   const fileName = payload?.fileName || "this file";
   const result = await dialog.showMessageBox(mainWindow, {
@@ -234,6 +259,78 @@ function openAllowedExternalUrl(url) {
   } catch (error) {
     return { ok: false, error: error.message || "Unable to open external link." };
   }
+}
+
+async function prepareImageAsset(payload = {}) {
+  const sourcePath = payload.sourcePath;
+  const documentPath = payload.documentPath;
+  const mode = payload.mode === "drop" ? "drop" : "choose";
+
+  if (!documentPath) {
+    return { ok: false, error: "Save the Markdown document before inserting local images." };
+  }
+  if (!sourcePath || !fs.existsSync(sourcePath)) {
+    return { ok: false, error: "The selected image could not be found." };
+  }
+
+  const stats = fs.statSync(sourcePath);
+  if (!stats.isFile()) {
+    return { ok: false, error: "The selected image is not a file." };
+  }
+
+  const extension = path.extname(sourcePath).toLowerCase();
+  if (!IMAGE_EXTENSIONS.has(extension)) {
+    return { ok: false, error: "Supported image types are PNG, JPG, GIF, WebP, and SVG." };
+  }
+
+  const documentDir = path.dirname(documentPath);
+  const normalizedSource = path.resolve(sourcePath);
+  const shouldCopy = mode === "drop" || !isPathInside(normalizedSource, documentDir);
+  const finalPath = shouldCopy
+    ? await copyImageBesideDocument(normalizedSource, documentPath)
+    : normalizedSource;
+
+  return {
+    ok: true,
+    filePath: finalPath,
+    markdownPath: toMarkdownRelativePath(documentDir, finalPath),
+    copied: shouldCopy
+  };
+}
+
+async function copyImageBesideDocument(sourcePath, documentPath) {
+  const documentDir = path.dirname(documentPath);
+  const documentStem = path.basename(documentPath, path.extname(documentPath));
+  const assetDir = path.join(documentDir, `${documentStem}.assets`);
+  await fs.promises.mkdir(assetDir, { recursive: true });
+
+  const parsed = path.parse(sourcePath);
+  const destination = await getAvailableAssetPath(assetDir, parsed.name, parsed.ext);
+  await fs.promises.copyFile(sourcePath, destination);
+  return destination;
+}
+
+async function getAvailableAssetPath(assetDir, baseName, extension) {
+  let index = 0;
+  while (true) {
+    const suffix = index === 0 ? "" : `-${index}`;
+    const candidate = path.join(assetDir, `${baseName}${suffix}${extension}`);
+    try {
+      await fs.promises.access(candidate);
+      index += 1;
+    } catch {
+      return candidate;
+    }
+  }
+}
+
+function isPathInside(candidatePath, parentPath) {
+  const relativePath = path.relative(path.resolve(parentPath), path.resolve(candidatePath));
+  return Boolean(relativePath) && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
+}
+
+function toMarkdownRelativePath(documentDir, filePath) {
+  return path.relative(documentDir, filePath).split(path.sep).join("/");
 }
 
 async function saveAs(payload) {

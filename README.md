@@ -80,6 +80,7 @@ Implemented prototype features:
 - Markdown toolbar actions using Lucide icon buttons with hover/focus tooltips
 - Insert Link dialog with display text, explicit Address/Email modes, smart normalization, and Markdown insertion
 - Styled-pane web and email links open externally through the OS instead of navigating the app window
+- Insert Image dialog with alt text, native image picker, drag/drop, save-first handling, and portable beside-document asset copying
 - Paragraph through H6 block formatting, with the outline currently limited to H1-H3
 - Block format dropdown follows the current cursor line
 - Word and character counts

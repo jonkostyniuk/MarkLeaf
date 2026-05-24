@@ -1,4 +1,6 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, webUtils } = require("electron");
+const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 contextBridge.exposeInMainWorld("markleaf", {
   platform: "electron",
@@ -11,6 +13,10 @@ contextBridge.exposeInMainWorld("markleaf", {
   saveDocumentAs: (payload) => ipcRenderer.invoke("document:saveAs", payload),
   refreshDocument: (filePath) => ipcRenderer.invoke("document:refresh", filePath),
   openExternalLink: (url) => ipcRenderer.invoke("link:openExternal", url),
+  chooseImage: () => ipcRenderer.invoke("image:choose"),
+  prepareImage: (payload) => ipcRenderer.invoke("image:prepare", payload),
+  getDroppedFilePath: (file) => webUtils.getPathForFile(file),
+  resolveDocumentAssetUrl: (documentPath, assetPath) => resolveDocumentAssetUrl(documentPath, assetPath),
   confirmOpenRecent: (payload) => ipcRenderer.invoke("dialog:confirmOpenRecent", payload),
   notifyMissingRecent: (payload) => ipcRenderer.invoke("dialog:notifyMissingRecent", payload),
   onExternalChange: (callback) => {
@@ -30,3 +36,21 @@ contextBridge.exposeInMainWorld("markleaf", {
     };
   }
 });
+
+function resolveDocumentAssetUrl(documentPath, assetPath) {
+  if (!documentPath || !assetPath) return assetPath;
+  if (/^(https?:|mailto:|data:|file:)/i.test(assetPath)) return assetPath;
+
+  const [cleanPath, suffix = ""] = assetPath.split(/([?#].*)/, 2);
+  const decodedPath = safeDecodeUriComponent(cleanPath);
+  const absolutePath = path.resolve(path.dirname(documentPath), decodedPath);
+  return `${pathToFileURL(absolutePath).toString()}${suffix}`;
+}
+
+function safeDecodeUriComponent(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}

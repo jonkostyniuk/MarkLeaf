@@ -566,7 +566,7 @@ The toolbar should provide common document controls while inserting or modifying
 - Strikethrough, if supported
 - Inline code
 - Link insertion via an `Insert Link` dialog with `Text to display`, explicit `Address` and `Email` modes, and smart Markdown link normalization.
-- Image
+- Image insertion via an `Insert Image` dialog with `Alt text`, native image picker, and drag/drop support.
 - Blockquote
 - Bullet list
 - Numbered list
@@ -582,13 +582,15 @@ Deferred Markdown control refinements:
 - Task list checked/unchecked toggle controls.
 - Table helpers for adding rows, adding columns, and setting alignment.
 - Link editing for existing links.
-- Image edit dialog and local image path picker support.
+- Image editing for existing image references.
 - Optional footnote support if a Markdown plugin is adopted.
 - Optional definition lists, admonitions/callouts, and Mermaid rendering as extension features rather than MVP requirements.
 
 Frontmatter should remain out of the main app metadata flow for MVP because app-controlled metadata belongs in sidecar JSON.
 
 Rendered links in the Styled pane should not navigate the Electron app window away from MarkLeaf. Web and email links should open externally through the operating system; unsupported local/document links should be blocked until a deliberate local-link workflow is designed.
+
+Local image insertion should require the Markdown document to be saved first so the app has a stable document-relative asset location. Dropped images should be copied into a sibling `<document-name>.assets/` folder and inserted as relative Markdown image references. Picker-selected images already inside the document folder tree may be linked relatively in place; external picker-selected images should be copied beside the document by default. MVP supported image types are PNG, JPG/JPEG, GIF, WebP, and SVG.
 
 ### 11.2 Document Structure Controls
 

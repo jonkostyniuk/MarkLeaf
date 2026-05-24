@@ -67,6 +67,8 @@ const state = {
   resizingSplit: false,
   linkSelection: null,
   linkKind: "web",
+  imageSelection: null,
+  imageAsset: null,
   autosaveTimer: null,
   watchTimer: null,
   recentFiles: loadRecentFiles()
@@ -229,6 +231,32 @@ app.innerHTML = `
         </footer>
       </form>
     </div>
+
+    <div id="imageDialog" class="modal-backdrop" hidden>
+      <form id="imageForm" class="modal" aria-labelledby="imageDialogTitle">
+        <header class="modal-header">
+          <h2 id="imageDialogTitle">Insert Image</h2>
+        </header>
+        <div class="modal-body">
+          <label class="form-field">
+            <span>Alt text</span>
+            <input id="imageAltInput" type="text" autocomplete="off">
+          </label>
+          <div class="form-field">
+            <span>Image file</span>
+            <button type="button" class="secondary-action" data-image-action="choose">Choose Image...</button>
+            <div id="imageDropZone" class="drop-zone" tabindex="0">
+              <span>Drop an image file here</span>
+            </div>
+            <p id="imagePathStatus" class="field-help">No image selected</p>
+          </div>
+        </div>
+        <footer class="modal-actions">
+          <button type="button" data-image-action="cancel">Cancel</button>
+          <button type="submit" class="primary-action">Insert</button>
+        </footer>
+      </form>
+    </div>
   </main>
 `;
 
@@ -254,6 +282,11 @@ const linkForm = document.querySelector("#linkForm");
 const linkTextInput = document.querySelector("#linkTextInput");
 const linkAddressInput = document.querySelector("#linkAddressInput");
 const linkAddressLabel = document.querySelector("#linkAddressLabel");
+const imageDialog = document.querySelector("#imageDialog");
+const imageForm = document.querySelector("#imageForm");
+const imageAltInput = document.querySelector("#imageAltInput");
+const imageDropZone = document.querySelector("#imageDropZone");
+const imagePathStatus = document.querySelector("#imagePathStatus");
 
 initialize();
 
@@ -321,6 +354,16 @@ function bindEvents() {
       return;
     }
 
+    if (target.dataset.imageAction === "cancel") {
+      closeImageDialog();
+      return;
+    }
+
+    if (target.dataset.imageAction === "choose") {
+      chooseImageForDialog();
+      return;
+    }
+
     if (target.dataset.action) {
       handleAction(target.dataset.action);
     }
@@ -363,9 +406,38 @@ function bindEvents() {
     }
   });
 
+  imageForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    insertConfiguredImage();
+  });
+
+  imageDialog.addEventListener("click", (event) => {
+    if (event.target === imageDialog) {
+      closeImageDialog();
+    }
+  });
+
+  imageDropZone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    imageDropZone.classList.add("drag-over");
+  });
+
+  imageDropZone.addEventListener("dragleave", () => {
+    imageDropZone.classList.remove("drag-over");
+  });
+
+  imageDropZone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    imageDropZone.classList.remove("drag-over");
+    handleDroppedImage(event.dataTransfer?.files?.[0]);
+  });
+
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !linkDialog.hidden) {
       closeLinkDialog();
+    }
+    if (event.key === "Escape" && !imageDialog.hidden) {
+      closeImageDialog();
     }
   });
 
@@ -398,6 +470,7 @@ function render() {
   }
   const documentStatus = getDocumentStatus();
   preview.innerHTML = renderMarkdown(state.markdown);
+  resolvePreviewImageSources();
   preview.className = `preview document ${styles[state.selectedStyle].className}`;
   editorRegion.dataset.mode = state.mode;
   updateSplitLayout();
@@ -852,8 +925,12 @@ function insertMarkdown(type) {
     return;
   }
 
+  if (type === "image") {
+    openImageDialog();
+    return;
+  }
+
   const inserts = {
-    image: "![image alt](image.png)",
     ul: "- List item",
     ol: "1. List item",
     task: "- [ ] Task item",
@@ -969,7 +1046,109 @@ function escapeMarkdownLinkText(value) {
 }
 
 function escapeMarkdownLinkAddress(value) {
-  return value.replace(/\\/g, "\\\\").replace(/\)/g, "\\)");
+  return value.replace(/\\/g, "\\\\").replace(/ /g, "%20").replace(/\)/g, "\\)");
+}
+
+async function openImageDialog() {
+  const saved = await ensureDocumentSavedForImages();
+  if (!saved) return;
+
+  const selection = getSelectionRange();
+  const selectedText = state.markdown.slice(selection.start, selection.end).trim();
+  state.imageSelection = selection;
+  state.imageAsset = null;
+  imageAltInput.value = selectedText || "";
+  imagePathStatus.textContent = "No image selected";
+  imageDialog.hidden = false;
+
+  window.setTimeout(() => {
+    imageAltInput.focus();
+    imageAltInput.select();
+  });
+}
+
+async function ensureDocumentSavedForImages() {
+  if (!isElectron) {
+    state.saveError = "MarkLeaf must run as the Electron desktop app to insert local images.";
+    render();
+    return false;
+  }
+
+  if (state.filePath) return true;
+
+  const result = await saveWithDesktopApi(true);
+  return Boolean(result?.ok && state.filePath);
+}
+
+function closeImageDialog() {
+  imageDialog.hidden = true;
+  state.imageSelection = null;
+  state.imageAsset = null;
+  imageDropZone.classList.remove("drag-over");
+  editorView.focus();
+}
+
+async function chooseImageForDialog() {
+  const result = await desktopApi.chooseImage();
+  if (!result?.ok) {
+    if (!result?.canceled) {
+      imagePathStatus.textContent = result?.error || "Unable to choose image";
+    }
+    return;
+  }
+
+  prepareImageForDialog(result.filePath, "choose");
+}
+
+async function handleDroppedImage(file) {
+  if (!file) return;
+  const sourcePath = desktopApi.getDroppedFilePath?.(file);
+  if (!sourcePath) {
+    imagePathStatus.textContent = "Unable to read the dropped image path";
+    return;
+  }
+
+  prepareImageForDialog(sourcePath, "drop");
+}
+
+function prepareImageForDialog(sourcePath, mode) {
+  state.imageAsset = { sourcePath, mode };
+  imagePathStatus.textContent = mode === "drop"
+    ? "Image selected; it will be copied beside the document on insert"
+    : "Image selected; external files will be copied beside the document on insert";
+}
+
+async function insertConfiguredImage() {
+  if (!state.imageAsset?.sourcePath) {
+    imagePathStatus.textContent = "Choose or drop an image first";
+    return;
+  }
+
+  const result = await desktopApi.prepareImage({
+    sourcePath: state.imageAsset.sourcePath,
+    documentPath: state.filePath,
+    mode: state.imageAsset.mode
+  });
+  if (!result?.ok) {
+    imagePathStatus.textContent = result?.error || "Unable to prepare image";
+    return;
+  }
+
+  const selection = state.imageSelection || getSelectionRange();
+  const altText = imageAltInput.value.trim() || "image";
+  const imagePath = result.markdownPath;
+  closeImageDialog();
+  replaceSelection(`![${escapeMarkdownLinkText(altText)}](${escapeMarkdownLinkAddress(imagePath)})`, selection.start, selection.end);
+}
+
+function resolvePreviewImageSources() {
+  if (!desktopApi?.resolveDocumentAssetUrl || !state.filePath) return;
+
+  preview.querySelectorAll("img").forEach((image) => {
+    const source = image.getAttribute("src");
+    if (!source) return;
+    image.setAttribute("src", desktopApi.resolveDocumentAssetUrl(state.filePath, source));
+  });
 }
 
 function applyBlockFormat(format) {
