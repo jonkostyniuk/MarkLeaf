@@ -1,4 +1,4 @@
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap, redo, undo } from "@codemirror/commands";
 import { markdown as markdownLanguage } from "@codemirror/lang-markdown";
 import { bracketMatching, defaultHighlightStyle, foldGutter, syntaxHighlighting } from "@codemirror/language";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
@@ -653,6 +653,14 @@ function bindDesktopEvents() {
   });
 
   desktopApi.onMenuCommand((command) => {
+    if (command === "undo") {
+      undo(editorView);
+      return;
+    }
+    if (command === "redo") {
+      redo(editorView);
+      return;
+    }
     const action = command === "save-as" ? "saveAs" : command;
     handleAction(action);
   });

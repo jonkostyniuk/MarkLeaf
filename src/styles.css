@@ -30,6 +30,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  overflow: hidden;
 }
 
 button,
@@ -74,10 +75,12 @@ button.active {
 }
 
 .shell {
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
   display: grid;
   grid-template-rows: 38px 38px 36px auto 1fr 24px;
   background: var(--paper-white);
+  overflow: hidden;
 }
 
 .appbar {
@@ -206,6 +209,7 @@ h1 {
   min-height: 0;
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .sidebar {
@@ -287,6 +291,7 @@ h1 {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   background: var(--line);
   gap: 1px;
+  overflow: hidden;
 }
 
 .editor-region[data-mode="markdown"] {
@@ -506,6 +511,7 @@ h1 {
   border-top: 1px solid var(--line);
   color: #d8e0dd;
   font-size: 11px;
+  overflow: hidden;
 }
 
 @media (max-width: 900px) {

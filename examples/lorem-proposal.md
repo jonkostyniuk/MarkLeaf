@@ -9,7 +9,7 @@ porta risus eu ex gravida, sed feugiat lorem ullamcorper.
 ## Objectives
 
 1. Improve document drafting speed.
-2. Keep authored content portable and plain-text.
+2. Keep authored content portable and pl![image alt](image.png)ain-text.
 3. Support professional styling without proprietary file formats.
 4. Enable credible export to formats used by reviewers.
 
@@ -46,3 +46,4 @@ ligula tortor ac sem.
 
 Should the first packaged build focus on macOS only, or should packaging be
 validated across macOS, Windows, and Linux at the same time?
+
