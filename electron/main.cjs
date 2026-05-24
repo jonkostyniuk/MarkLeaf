@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -6,6 +6,7 @@ let mainWindow = null;
 let watchedPath = null;
 let watcher = null;
 let suppressNextWatchEvent = false;
+let isQuitting = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -23,9 +24,21 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, "..", "index.html"));
+
+  mainWindow.on("close", () => {
+    if (!isQuitting) {
+      isQuitting = true;
+      app.quit();
+    }
+  });
+
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
 }
 
 app.whenReady().then(() => {
+  installMenu();
   createWindow();
 
   app.on("activate", () => {
@@ -37,10 +50,63 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   stopWatching();
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  app.quit();
 });
+
+app.on("before-quit", () => {
+  isQuitting = true;
+});
+
+function installMenu() {
+  const template = [
+    {
+      label: "MarkLeaf",
+      submenu: [
+        { role: "about" },
+        { type: "separator" },
+        { role: "quit" }
+      ]
+    },
+    {
+      label: "File",
+      submenu: [
+        { label: "New", accelerator: "CmdOrCtrl+N", click: () => mainWindow?.webContents.send("menu:new") },
+        { label: "Open...", accelerator: "CmdOrCtrl+O", click: () => mainWindow?.webContents.send("menu:open") },
+        { label: "Save", accelerator: "CmdOrCtrl+S", click: () => mainWindow?.webContents.send("menu:save") },
+        { label: "Save As...", accelerator: "CmdOrCtrl+Shift+S", click: () => mainWindow?.webContents.send("menu:save-as") },
+        { type: "separator" },
+        { label: "Reload from Disk", accelerator: "CmdOrCtrl+R", click: () => mainWindow?.webContents.send("menu:refresh") }
+      ]
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" }
+      ]
+    },
+    {
+      label: "View",
+      submenu: [
+        { role: "reload" },
+        { role: "toggleDevTools" },
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        { role: "togglefullscreen" }
+      ]
+    }
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
 
 ipcMain.handle("document:new", async () => {
   stopWatching();

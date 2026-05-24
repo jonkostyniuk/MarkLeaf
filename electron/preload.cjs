@@ -11,5 +11,16 @@ contextBridge.exposeInMainWorld("markleaf", {
     const listener = (_event, payload) => callback(payload);
     ipcRenderer.on("document:external-change", listener);
     return () => ipcRenderer.removeListener("document:external-change", listener);
+  },
+  onMenuCommand: (callback) => {
+    const channels = ["menu:new", "menu:open", "menu:save", "menu:save-as", "menu:refresh"];
+    const listeners = channels.map((channel) => {
+      const listener = () => callback(channel.replace("menu:", ""));
+      ipcRenderer.on(channel, listener);
+      return { channel, listener };
+    });
+    return () => {
+      listeners.forEach(({ channel, listener }) => ipcRenderer.removeListener(channel, listener));
+    };
   }
 });

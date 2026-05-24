@@ -227,6 +227,7 @@ function bindEvents() {
   });
 
   window.addEventListener("beforeunload", (event) => {
+    if (isElectron) return;
     if (!state.dirty) return;
     event.preventDefault();
     event.returnValue = "";
@@ -587,6 +588,11 @@ function bindDesktopEvents() {
     if (payload.filePath !== state.filePath) return;
     state.externalChange = true;
     render();
+  });
+
+  desktopApi.onMenuCommand((command) => {
+    const action = command === "save-as" ? "saveAs" : command;
+    handleAction(action);
   });
 }
 
