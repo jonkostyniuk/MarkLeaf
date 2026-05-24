@@ -5,9 +5,13 @@ import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { EditorState } from "@codemirror/state";
 import { EditorView, drawSelection, highlightActiveLine, keymap, lineNumbers } from "@codemirror/view";
 import {
+  AlertCircle,
+  AlertTriangle,
   Bold,
+  CheckCircle2,
   Code,
   Columns2,
+  FileWarning,
   FilePlus,
   FolderOpen,
   Image,
@@ -15,6 +19,7 @@ import {
   List,
   ListOrdered,
   ListTodo,
+  LoaderCircle,
   Minus,
   RefreshCw,
   Save,
@@ -27,27 +32,10 @@ import { extractHeadings, getWordCount, renderMarkdown } from "./markdown.js";
 const AUTOSAVE_DELAY_MS = 1200;
 const WATCH_INTERVAL_MS = 3000;
 const RECENT_FILES_KEY = "markleaf.recentFiles";
+const MAX_RECENT_FILES = 5;
+const EMPTY_DOCUMENT = "";
 const desktopApi = window.markleaf;
 const isElectron = desktopApi?.platform === "electron";
-
-const sampleMarkdown = `# Untitled MarkLeaf Document
-
-Write Markdown on the left and preview the styled document on the right.
-
-## Getting started
-
-- Use the toolbar to insert Markdown structures.
-- Pick a style to change the preview.
-- Open a local Markdown file to enable native save, reload, sidecar, and external-change workflows.
-
-> MarkLeaf keeps Markdown as the source of truth.
-
-| Item | Status |
-| --- | --- |
-| Markdown editor | Ready |
-| Preview | Ready |
-| Electron shell | Ready |
-`;
 
 const styles = {
   memo: {
@@ -65,7 +53,7 @@ const styles = {
 };
 
 const state = {
-  markdown: sampleMarkdown,
+  markdown: EMPTY_DOCUMENT,
   fileHandle: null,
   filePath: null,
   fileName: "Untitled.md",
@@ -73,7 +61,7 @@ const state = {
   dirty: false,
   saving: false,
   saveError: "",
-  externalChange: false,
+  diskChanged: false,
   mode: "split",
   selectedStyle: "memo",
   autosaveTimer: null,
@@ -115,13 +103,9 @@ app.innerHTML = `
 
     <section class="commandbar" aria-label="Document commands">
       <div class="command-group">
-        <button type="button" data-action="new" class="icon-button" aria-label="New document" data-tooltip="New document">${icon(FilePlus)}</button>
+        <button type="button" data-action="new" class="icon-button tooltip-left" aria-label="New document" data-tooltip="New document">${icon(FilePlus)}</button>
         <button type="button" data-action="open" class="icon-button" aria-label="Open Markdown file" data-tooltip="Open Markdown file">${icon(FolderOpen)}</button>
-        <label class="file-fallback" id="importLabel">
-          Import
-          <input id="fileInput" type="file" accept=".md,.markdown,.txt,.mdown,text/markdown,text/plain">
-        </label>
-        <button type="button" data-action="save" class="icon-button primary-command" aria-label="Save document" data-tooltip="Save document">${icon(Save)}</button>
+        <button type="button" data-action="save" class="icon-button" aria-label="Save document" data-tooltip="Save document">${icon(Save)}</button>
         <button type="button" data-action="saveAs" class="icon-button" aria-label="Save document as" data-tooltip="Save document as">${icon(SaveAll)}</button>
         <button type="button" data-action="refresh" class="icon-button" aria-label="Reload from disk" data-tooltip="Reload from disk">${icon(RefreshCw)}</button>
       </div>
@@ -157,23 +141,17 @@ app.innerHTML = `
       <div class="tool-group">
         <select id="styleSelect" aria-label="Preview style"></select>
         <div class="mode-switch" role="group" aria-label="View mode">
-          <button type="button" data-mode="markdown" class="icon-button text-icon" aria-label="Markdown mode" data-tooltip="Markdown mode">MD</button>
-          <button type="button" data-mode="split" class="icon-button" aria-label="Split mode" data-tooltip="Split mode">${icon(Columns2)}</button>
+          <button type="button" data-mode="markdown" class="icon-button text-icon tooltip-right" aria-label="Markdown mode" data-tooltip="Markdown mode">MD</button>
+          <button type="button" data-mode="split" class="icon-button tooltip-right" aria-label="Split mode" data-tooltip="Split mode">${icon(Columns2)}</button>
         </div>
       </div>
     </section>
 
-    <section id="externalBanner" class="external-banner" hidden>
-      <span>File changed externally.</span>
-      <button type="button" data-action="acceptExternal">Reload from disk</button>
-      <button type="button" data-action="dismissExternal">Keep local version</button>
-    </section>
-
     <section class="workspace">
       <aside class="sidebar">
-        <section class="sidebar-panel">
-          <h2>Document</h2>
-          <dl class="document-meta">
+        <details class="sidebar-panel" open>
+          <summary><span>Document</span></summary>
+          <dl class="document-meta sidebar-panel-body">
             <dt>File</dt>
             <dd id="fileName"></dd>
             <dt>Status</dt>
@@ -183,15 +161,15 @@ app.innerHTML = `
             <dt>Characters</dt>
             <dd id="characterCount"></dd>
           </dl>
-        </section>
-        <section class="sidebar-panel">
-          <h2>Outline</h2>
-          <nav id="outline" class="outline"></nav>
-        </section>
-        <section class="sidebar-panel">
-          <h2>Recent</h2>
-          <ul id="recentFiles" class="recent-files"></ul>
-        </section>
+        </details>
+        <details class="sidebar-panel" open>
+          <summary><span>Outline</span></summary>
+          <nav id="outline" class="outline sidebar-panel-body"></nav>
+        </details>
+        <details class="sidebar-panel" open>
+          <summary><span>Recent</span></summary>
+          <ul id="recentFiles" class="recent-files sidebar-panel-body"></ul>
+        </details>
       </aside>
 
       <section id="editorRegion" class="editor-region">
@@ -229,12 +207,9 @@ const outline = document.querySelector("#outline");
 const recentFiles = document.querySelector("#recentFiles");
 const styleSelect = document.querySelector("#styleSelect");
 const blockSelect = document.querySelector("#blockSelect");
-const externalBanner = document.querySelector("#externalBanner");
 const pathStatus = document.querySelector("#pathStatus");
 const modeStatus = document.querySelector("#modeStatus");
 const watchStatus = document.querySelector("#watchStatus");
-const fileInput = document.querySelector("#fileInput");
-const importLabel = document.querySelector("#importLabel");
 const titleFileName = document.querySelector("#titleFileName");
 const titleSaveState = document.querySelector("#titleSaveState");
 
@@ -252,30 +227,34 @@ function initialize() {
 function initializeEditor() {
   editorView = new EditorView({
     parent: editor,
-    state: EditorState.create({
-      doc: state.markdown,
-      extensions: [
-        lineNumbers(),
-        foldGutter(),
-        history(),
-        drawSelection(),
-        highlightActiveLine(),
-        bracketMatching(),
-        highlightSelectionMatches(),
-        markdownLanguage(),
-        syntaxHighlighting(defaultHighlightStyle),
-        keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
-        EditorView.lineWrapping,
-        EditorView.updateListener.of((update) => {
-          if (!update.docChanged || suppressEditorUpdate) return;
-          state.markdown = getEditorText();
-          state.dirty = true;
-          state.saveError = "";
-          scheduleAutoSave();
-          render();
-        })
-      ]
-    })
+    state: createEditorState(state.markdown)
+  });
+}
+
+function createEditorState(doc) {
+  return EditorState.create({
+    doc,
+    extensions: [
+      lineNumbers(),
+      foldGutter(),
+      history(),
+      drawSelection(),
+      highlightActiveLine(),
+      bracketMatching(),
+      highlightSelectionMatches(),
+      markdownLanguage(),
+      syntaxHighlighting(defaultHighlightStyle),
+      keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+      EditorView.lineWrapping,
+      EditorView.updateListener.of((update) => {
+        if (!update.docChanged || suppressEditorUpdate) return;
+        state.markdown = getEditorText();
+        state.dirty = true;
+        state.saveError = "";
+        scheduleAutoSave();
+        render();
+      })
+    ]
   });
 }
 
@@ -286,6 +265,9 @@ function bindEvents() {
 
     if (target.dataset.action) {
       handleAction(target.dataset.action);
+    }
+    if (target.dataset.recentPath) {
+      openRecentFile(target.dataset.recentPath);
     }
     if (target.dataset.wrap) {
       wrapSelection(target.dataset.wrap);
@@ -311,13 +293,6 @@ function bindEvents() {
     render();
   });
 
-  fileInput.addEventListener("change", async () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
-    await openImportedFile(file);
-    fileInput.value = "";
-  });
-
   window.addEventListener("beforeunload", (event) => {
     if (isElectron) return;
     if (!state.dirty) return;
@@ -332,11 +307,6 @@ async function handleAction(action) {
   if (action === "save") await saveNow();
   if (action === "saveAs") await saveAs();
   if (action === "refresh") await refreshFromDisk();
-  if (action === "acceptExternal") await refreshFromDisk(true);
-  if (action === "dismissExternal") {
-    state.externalChange = false;
-    render();
-  }
 }
 
 function populateStyleSelect() {
@@ -350,32 +320,86 @@ function render() {
   if (getEditorText() !== state.markdown) {
     setEditorText(state.markdown);
   }
+  const documentStatus = getDocumentStatus();
   preview.innerHTML = renderMarkdown(state.markdown);
   preview.className = `preview document ${styles[state.selectedStyle].className}`;
   editorRegion.dataset.mode = state.mode;
-  externalBanner.hidden = !state.externalChange;
 
   fileName.textContent = state.fileName;
-  saveState.textContent = getSaveStateLabel();
+  saveState.innerHTML = renderStatus(documentStatus, "sidebar");
   titleFileName.textContent = state.fileName;
-  titleSaveState.textContent = getSaveStateLabel();
+  titleSaveState.innerHTML = renderStatus(documentStatus, "title");
   wordCount.textContent = String(getWordCount(state.markdown));
   characterCount.textContent = String(state.markdown.length);
   pathStatus.textContent = getPathStatus();
   modeStatus.textContent = `Mode: ${state.mode}`;
   watchStatus.textContent = getWatchStatus();
-  importLabel.hidden = isElectron;
 
   renderOutline();
   renderRecentFiles();
   updateModeButtons();
 }
 
-function getSaveStateLabel() {
-  if (state.saveError) return `Save error: ${state.saveError}`;
-  if (state.saving) return "Saving...";
-  if (state.dirty) return "Unsaved";
-  return "Saved";
+function getDocumentStatus() {
+  if (state.saveError) {
+    return {
+      type: "error",
+      label: isOpenError(state.saveError) ? "Open error" : "Save error",
+      detail: state.saveError,
+      icon: AlertCircle
+    };
+  }
+  if (state.saving) {
+    return {
+      type: "saving",
+      label: "Saving...",
+      detail: "Writing the current document to disk.",
+      icon: LoaderCircle
+    };
+  }
+  if (state.diskChanged) {
+    return {
+      type: "disk-changed",
+      label: "Disk changed",
+      detail: "The file changed outside MarkLeaf. Use Reload from disk to pull in the latest version.",
+      icon: FileWarning
+    };
+  }
+  if (state.dirty) {
+    return {
+      type: "unsaved",
+      label: "Unsaved",
+      detail: "Local changes have not been saved yet.",
+      icon: AlertTriangle
+    };
+  }
+  if (!state.filePath && !state.fileHandle && state.fileName === "Untitled.md") {
+    return {
+      type: "new",
+      label: "New document",
+      detail: "This document has not been saved to a file yet.",
+      icon: FilePlus
+    };
+  }
+  return {
+    type: "saved",
+    label: "Saved",
+    detail: "The current document is saved.",
+    icon: CheckCircle2
+  };
+}
+
+function renderStatus(status, variant) {
+  return `
+    <span class="document-status document-status-${status.type} document-status-${variant}" title="${escapeAttribute(status.detail)}" aria-label="${escapeAttribute(status.detail)}">
+      ${icon(status.icon)}
+      <span>${escapeHtml(status.label)}</span>
+    </span>
+  `;
+}
+
+function isOpenError(message) {
+  return /open|recent|missing|not found/i.test(message);
 }
 
 function renderOutline() {
@@ -401,7 +425,15 @@ function renderRecentFiles() {
     recentFiles.innerHTML = '<li class="empty">No recent files.</li>';
     return;
   }
-  recentFiles.innerHTML = state.recentFiles.map((name) => `<li>${name}</li>`).join("");
+  recentFiles.innerHTML = state.recentFiles
+    .map((file) => `
+      <li>
+        <button type="button" class="recent-file-button" data-recent-path="${escapeAttribute(file.path)}" title="${escapeAttribute(file.path)}">
+          <span>${escapeHtml(file.name)}</span>
+        </button>
+      </li>
+    `)
+    .join("");
 }
 
 function updateModeButtons() {
@@ -412,13 +444,32 @@ function updateModeButtons() {
 
 function scheduleAutoSave() {
   window.clearTimeout(state.autosaveTimer);
+  if (!canAutoSave()) return;
   state.autosaveTimer = window.setTimeout(() => {
-    saveNow();
+    saveNow({ autosave: true });
   }, AUTOSAVE_DELAY_MS);
 }
 
-async function saveNow() {
+function clearAutoSave() {
+  window.clearTimeout(state.autosaveTimer);
+  state.autosaveTimer = null;
+}
+
+function canAutoSave() {
+  if (state.diskChanged) return false;
+  return isElectron ? Boolean(state.filePath) : Boolean(state.fileHandle);
+}
+
+async function saveNow(options = {}) {
+  const { autosave = false } = options;
+
+  if (autosave && !canAutoSave()) return;
+
   if (isElectron) {
+    if (!state.filePath && !autosave) {
+      await saveWithDesktopApi(true);
+      return;
+    }
     await saveWithDesktopApi(false);
     return;
   }
@@ -440,7 +491,7 @@ async function saveNow() {
     state.lastModified = file.lastModified;
     state.dirty = false;
     state.saving = false;
-    addRecentFile(state.fileName);
+    state.diskChanged = false;
   } catch (error) {
     state.saving = false;
     state.saveError = error.message || "Unable to save";
@@ -462,7 +513,7 @@ async function openWithPicker() {
   }
 
   if (!window.showOpenFilePicker) {
-    state.saveError = "Browser file picker handles are unavailable. Use Import instead.";
+    state.saveError = "Browser file picker handles are unavailable in this environment.";
     render();
     return;
   }
@@ -490,6 +541,7 @@ async function openWithPicker() {
 }
 
 async function openFileHandle(handle) {
+  clearAutoSave();
   const file = await handle.getFile();
   state.fileHandle = handle;
   state.filePath = null;
@@ -498,38 +550,74 @@ async function openFileHandle(handle) {
   state.lastModified = file.lastModified;
   state.dirty = false;
   state.saveError = "";
-  state.externalChange = false;
-  setEditorText(state.markdown);
-  addRecentFile(file.name);
+  state.diskChanged = false;
+  resetEditorDocument(state.markdown);
   startWatching();
   render();
 }
 
-async function openImportedFile(file) {
-  state.fileHandle = null;
-  state.filePath = null;
-  state.fileName = file.name;
-  state.markdown = await file.text();
-  state.lastModified = file.lastModified;
-  state.dirty = false;
-  state.saveError = "";
-  state.externalChange = false;
-  setEditorText(state.markdown);
-  addRecentFile(file.name);
-  stopWatching();
+async function openRecentFile(filePath) {
+  if (!isElectron) return;
+
+  const recentFile = state.recentFiles.find((file) => file.path === filePath);
+  const confirmation = await desktopApi.confirmOpenRecent({
+    fileName: recentFile?.name || filePath,
+    filePath
+  });
+  if (!confirmation?.confirmed) return;
+
+  const availability = await desktopApi.recentDocumentExists(filePath);
+  if (!availability?.exists) {
+    await desktopApi.notifyMissingRecent({ filePath });
+    removeRecentFile(filePath);
+    render();
+    return;
+  }
+
+  const ready = await prepareCurrentDocumentForSwitch();
+  if (!ready) return;
+
+  const result = await desktopApi.openRecentDocument(filePath);
+  if (result?.ok) {
+    applyOpenedDocument(result);
+    return;
+  }
+
+  if (result?.missing) {
+    await desktopApi.notifyMissingRecent({ filePath });
+    removeRecentFile(filePath);
+    render();
+    return;
+  }
+
+  state.saveError = result?.error || "Unable to open recent file";
   render();
 }
 
-async function refreshFromDisk(force = false) {
+async function prepareCurrentDocumentForSwitch() {
+  clearAutoSave();
+
+  if (!state.dirty) return true;
+
+  if (isElectron) {
+    const saveResult = state.filePath
+      ? await saveWithDesktopApi(false, { applyResult: false })
+      : await saveWithDesktopApi(true, { applyResult: false });
+    return Boolean(saveResult?.ok);
+  }
+
+  if (state.fileHandle) {
+    await saveNow();
+    return !state.dirty && !state.saveError;
+  }
+
+  return false;
+}
+
+async function refreshFromDisk() {
   if (isElectron) {
     if (!state.filePath) {
       state.saveError = "Refresh requires an opened file.";
-      render();
-      return;
-    }
-
-    if (state.dirty && !force) {
-      state.externalChange = true;
       render();
       return;
     }
@@ -550,19 +638,13 @@ async function refreshFromDisk(force = false) {
     return;
   }
 
-  if (state.dirty && !force) {
-    state.externalChange = true;
-    render();
-    return;
-  }
-
   const file = await state.fileHandle.getFile();
   state.markdown = await file.text();
   state.lastModified = file.lastModified;
   state.dirty = false;
   state.saveError = "";
-  state.externalChange = false;
-  setEditorText(state.markdown);
+  state.diskChanged = false;
+  resetEditorDocument(state.markdown);
   render();
 }
 
@@ -573,15 +655,8 @@ function startWatching() {
     try {
       const file = await state.fileHandle.getFile();
       if (state.lastModified && file.lastModified !== state.lastModified) {
-        if (state.dirty) {
-          state.externalChange = true;
-          render();
-        } else {
-          state.markdown = await file.text();
-          state.lastModified = file.lastModified;
-          setEditorText(state.markdown);
-          render();
-        }
+        state.diskChanged = true;
+        render();
       }
     } catch (error) {
       state.saveError = error.message || "Unable to watch file";
@@ -597,15 +672,18 @@ function stopWatching() {
 
 function createNewDocument() {
   desktopApi?.newDocument();
+  clearAutoSave();
   state.fileHandle = null;
   state.filePath = null;
   state.fileName = "Untitled.md";
   state.lastModified = null;
-  state.markdown = sampleMarkdown;
-  state.dirty = true;
+  state.markdown = EMPTY_DOCUMENT;
+  state.dirty = false;
+  state.saving = false;
   state.saveError = "";
-  state.externalChange = false;
+  state.diskChanged = false;
   stopWatching();
+  resetEditorDocument(state.markdown);
   render();
 }
 
@@ -624,7 +702,8 @@ async function saveAs() {
   URL.revokeObjectURL(url);
 }
 
-async function saveWithDesktopApi(saveAsDocument) {
+async function saveWithDesktopApi(saveAsDocument, options = {}) {
+  const { applyResult = true } = options;
   try {
     state.saving = true;
     state.saveError = "";
@@ -642,8 +721,18 @@ async function saveWithDesktopApi(saveAsDocument) {
       ? await desktopApi.saveDocumentAs(payload)
       : await desktopApi.saveDocument(payload);
 
-    if (result?.ok) {
+    if (result?.ok && applyResult) {
       applyOpenedDocument(result);
+    } else if (result?.ok) {
+      state.filePath = result.filePath || state.filePath;
+      state.fileName = result.fileName || state.fileName;
+      state.lastModified = result.lastModified || state.lastModified;
+      state.dirty = false;
+      state.saving = false;
+      state.saveError = "";
+      state.diskChanged = false;
+      addRecentFile(result);
+      render();
     } else if (!result?.canceled) {
       state.saveError = result?.error || "Unable to save file";
       state.saving = false;
@@ -652,14 +741,17 @@ async function saveWithDesktopApi(saveAsDocument) {
       state.saving = false;
       render();
     }
+    return result;
   } catch (error) {
     state.saving = false;
     state.saveError = error.message || "Unable to save file";
     render();
+    return { ok: false, error: state.saveError };
   }
 }
 
 function applyOpenedDocument(result) {
+  clearAutoSave();
   state.fileHandle = null;
   state.filePath = result.filePath || null;
   state.fileName = result.fileName || "Untitled.md";
@@ -668,9 +760,9 @@ function applyOpenedDocument(result) {
   state.dirty = false;
   state.saving = false;
   state.saveError = "";
-  state.externalChange = false;
-  setEditorText(state.markdown);
-  addRecentFile(state.fileName);
+  state.diskChanged = false;
+  resetEditorDocument(state.markdown);
+  addRecentFile(result);
   if (!isElectron) startWatching();
   render();
 }
@@ -680,7 +772,7 @@ function bindDesktopEvents() {
 
   desktopApi.onExternalChange((payload) => {
     if (payload.filePath !== state.filePath) return;
-    state.externalChange = true;
+    state.diskChanged = true;
     render();
   });
 
@@ -791,6 +883,13 @@ function setEditorText(value) {
   suppressEditorUpdate = false;
 }
 
+function resetEditorDocument(value) {
+  if (!editorView) return;
+  suppressEditorUpdate = true;
+  editorView.setState(createEditorState(value));
+  suppressEditorUpdate = false;
+}
+
 function getSelectionRange() {
   const range = editorView.state.selection.main;
   return {
@@ -809,16 +908,55 @@ function setSelectionRange(start, end) {
   });
 }
 
-function addRecentFile(name) {
-  state.recentFiles = [name, ...state.recentFiles.filter((item) => item !== name)].slice(0, 5);
+function addRecentFile(file) {
+  if (!file?.filePath) return;
+  const item = {
+    name: file.fileName || getBaseName(file.filePath),
+    path: file.filePath
+  };
+  state.recentFiles = [item, ...state.recentFiles.filter((existing) => existing.path !== item.path)].slice(0, MAX_RECENT_FILES);
+  localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(state.recentFiles));
+}
+
+function removeRecentFile(filePath) {
+  state.recentFiles = state.recentFiles.filter((file) => file.path !== filePath);
   localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(state.recentFiles));
 }
 
 function loadRecentFiles() {
   try {
     const value = JSON.parse(localStorage.getItem(RECENT_FILES_KEY) || "[]");
-    return Array.isArray(value) ? value : [];
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((item) => {
+        if (item && typeof item === "object" && typeof item.path === "string") {
+          return {
+            name: typeof item.name === "string" ? item.name : getBaseName(item.path),
+            path: item.path
+          };
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .slice(0, MAX_RECENT_FILES);
   } catch {
     return [];
   }
+}
+
+function getBaseName(filePath) {
+  return filePath.split(/[\\/]/).pop() || filePath;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value);
 }

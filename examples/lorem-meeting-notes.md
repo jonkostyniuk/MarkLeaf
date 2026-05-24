@@ -16,8 +16,7 @@
 ## Notes
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras vitae neque vel
-urna volutpat commodo. Integer porttitor lectus sed mauris cursus, a porttitor
-erat ullamcorper.
+urna volutpat commodo. Integer porttitor lectus sed mauris cursus, a porttitor.
 
 ### Discussion
 

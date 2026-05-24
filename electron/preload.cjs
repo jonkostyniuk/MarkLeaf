@@ -5,9 +5,13 @@ contextBridge.exposeInMainWorld("markleaf", {
   os: process.platform,
   newDocument: () => ipcRenderer.invoke("document:new"),
   openDocument: () => ipcRenderer.invoke("document:open"),
+  recentDocumentExists: (filePath) => ipcRenderer.invoke("document:recentExists", filePath),
+  openRecentDocument: (filePath) => ipcRenderer.invoke("document:openRecent", filePath),
   saveDocument: (payload) => ipcRenderer.invoke("document:save", payload),
   saveDocumentAs: (payload) => ipcRenderer.invoke("document:saveAs", payload),
   refreshDocument: (filePath) => ipcRenderer.invoke("document:refresh", filePath),
+  confirmOpenRecent: (payload) => ipcRenderer.invoke("dialog:confirmOpenRecent", payload),
+  notifyMissingRecent: (payload) => ipcRenderer.invoke("dialog:notifyMissingRecent", payload),
   onExternalChange: (callback) => {
     const listener = (_event, payload) => callback(payload);
     ipcRenderer.on("document:external-change", listener);

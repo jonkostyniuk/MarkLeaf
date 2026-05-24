@@ -66,6 +66,117 @@ Next step:
 
 ## Resolved
 
+## ISSUE-013: Watcher false-positive disk changed state after autosave
+
+Status: resolved
+Area: filesystem
+Raised in: 2026-05-24
+Resolved in: 2026-05-24
+Owner: codex
+
+Context:
+- Editing a saved file in MarkLeaf could briefly save successfully and then switch to `Disk changed`.
+- The file watcher was treating MarkLeaf's own save/autosave filesystem events as external edits.
+- A simple one-event or timer-only suppression was not reliable enough on macOS because a single save can produce delayed or repeated file events.
+
+Question:
+- How should MarkLeaf distinguish its own writes from real background edits by AI tools, scripts, or other editors?
+
+Impact:
+- Autosave could appear stuck because `Disk changed` intentionally pauses autosave to avoid overwriting external edits.
+
+Resolution:
+- Updated the Electron watcher to track the known file modification time after MarkLeaf opens or writes a file.
+- Watch events whose mtime matches the known MarkLeaf-written mtime are ignored.
+- Real later external edits still set the renderer's `Disk changed` status.
+
+Next step:
+- Add integration or manual QA coverage for save/autosave followed by external edits once desktop UI testing is available.
+
+## ISSUE-012: Shared document status model
+
+Status: resolved
+Area: app
+Raised in: 2026-05-24
+Resolved in: 2026-05-24
+Owner: shared
+
+Context:
+- The title-bar status and left sidebar document status duplicated the same plain text.
+- External AI/script edits needed a visible state that was not the old yellow banner.
+
+Question:
+- What status states should be shown, and how should they be presented consistently?
+
+Impact:
+- Plain duplicated status text made the app feel unfinished and made external-change state ambiguous.
+
+Resolution:
+- Added a shared document status renderer used by both the title bar and sidebar.
+- Added Lucide status icons and colour-coded states for new document, unsaved, saving, saved, disk changed, and error.
+- Added a real `diskChanged` state that pauses autosave and requires explicit Reload from disk.
+- Removed the persistent external-change banner from the UI.
+
+Next step:
+- Consider adding a confirmation prompt before Reload from disk overwrites dirty local edits.
+
+## ISSUE-011: Recent file links and missing-file handling
+
+Status: resolved
+Area: app
+Raised in: 2026-05-24
+Resolved in: 2026-05-24
+Owner: shared
+
+Context:
+- The Recent panel listed filenames only, without opening functionality.
+- Label-only recent entries were not useful for returning to files.
+
+Question:
+- How should recent files behave in the Electron MVP?
+
+Impact:
+- Recent files were decorative rather than functional.
+
+Resolution:
+- Recent files are now path-backed entries capped at five, ordered from most to least recent.
+- Clicking a recent file shows a native Yes/No confirmation.
+- Dirty saved documents are saved before switching.
+- Dirty unsaved documents prompt for first save before switching.
+- Missing recent files notify the user and are removed from the list.
+
+Next step:
+- Consider a clear-recents command if the list needs manual management later.
+
+## ISSUE-010: Sidebar and command-bar polish pass
+
+Status: resolved
+Area: app
+Raised in: 2026-05-24
+Resolved in: 2026-05-24
+Owner: shared
+
+Context:
+- Several early UI details still felt like prototype or browser-era affordances.
+- The browser fallback Import control was not needed in the app.
+- Save was visually treated as a special primary action despite autosave being central.
+- Sidebar sections were static and could not be collapsed.
+
+Question:
+- Which UI details should be tightened before continuing MVP feature work?
+
+Impact:
+- Unused controls and inconsistent command styling made the desktop app feel less native.
+
+Resolution:
+- Removed the Import button and associated file-input fallback functionality.
+- Made Save visually consistent with other command buttons.
+- Added collapsible Document, Outline, and Recent sidebar sections.
+- Fixed tooltip weight and edge clipping behavior for command and mode buttons.
+
+Next step:
+- Continue applying the same native-app consistency standard to settings and export UI.
+
 ## ISSUE-009: Brand asset source-of-truth location
 
 Status: resolved
@@ -235,8 +346,8 @@ Resolved in: 2026-05-23
 Owner: shared
 
 Context:
-- Native-grade file watching, sidecar creation beside arbitrary files, and write permissions depend on browser File System Access API support and user-granted handles.
-- The current prototype provides manual file fallback, manual refresh, debounced saves when writable handles are available, and visible external-change warnings.
+- Native-grade file watching, sidecar creation beside arbitrary files, and write permissions initially depended on browser File System Access API support and user-granted handles.
+- The earlier browser prototype provided manual file fallback, manual refresh, debounced saves when writable handles were available, and visible external-change warnings.
 
 Question:
 - Which file open/save/watch behavior should move into the Electron main process first?

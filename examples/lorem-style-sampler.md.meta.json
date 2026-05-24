@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "style": {
+    "id": "report"
+  },
+  "view": {
+    "mode": "split",
+    "wordWrap": true
+  },
+  "export": {
+    "pdf": {},
+    "docx": {}
+  },
+  "updatedAt": "2026-05-24T14:19:07.733Z"
+}

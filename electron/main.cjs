@@ -3,11 +3,13 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const rendererIndex = path.join(__dirname, "..", "dist", "index.html");
+const OWN_WRITE_SUPPRESSION_MS = 1500;
 
 let mainWindow = null;
 let watchedPath = null;
 let watcher = null;
-let suppressNextWatchEvent = false;
+let watchedMtimeMs = null;
+let suppressWatchUntil = 0;
 let isQuitting = false;
 
 function createWindow() {
@@ -135,6 +137,22 @@ ipcMain.handle("document:open", async () => {
   return openFile(result.filePaths[0]);
 });
 
+ipcMain.handle("document:openRecent", async (_event, filePath) => {
+  if (!filePath || !fs.existsSync(filePath)) {
+    return { ok: false, missing: true, filePath };
+  }
+
+  try {
+    return openFile(filePath);
+  } catch (error) {
+    return { ok: false, error: error.message || "Unable to open recent file.", filePath };
+  }
+});
+
+ipcMain.handle("document:recentExists", async (_event, filePath) => {
+  return { exists: Boolean(filePath && fs.existsSync(filePath)), filePath };
+});
+
 ipcMain.handle("document:save", async (_event, payload) => {
   if (!payload?.filePath) {
     return saveAs(payload);
@@ -155,10 +173,38 @@ ipcMain.handle("document:refresh", async (_event, filePath) => {
   return openFile(filePath);
 });
 
+ipcMain.handle("dialog:confirmOpenRecent", async (_event, payload) => {
+  const fileName = payload?.fileName || "this file";
+  const result = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Yes", "No"],
+    defaultId: 0,
+    cancelId: 1,
+    title: "Open Recent File",
+    message: `Open ${fileName}?`,
+    detail: payload?.filePath || ""
+  });
+
+  return { confirmed: result.response === 0 };
+});
+
+ipcMain.handle("dialog:notifyMissingRecent", async (_event, payload) => {
+  await dialog.showMessageBox(mainWindow, {
+    type: "warning",
+    buttons: ["OK"],
+    defaultId: 0,
+    title: "Recent File Missing",
+    message: "The recent file could not be found.",
+    detail: payload?.filePath || ""
+  });
+
+  return { ok: true };
+});
+
 function openFile(filePath) {
   const markdown = fs.readFileSync(filePath, "utf8");
   const result = readFileResult(filePath, markdown);
-  watchFile(filePath);
+  watchFile(filePath, result.lastModified);
   return result;
 }
 
@@ -182,10 +228,12 @@ async function saveAs(payload) {
 }
 
 async function writeDocument(filePath, markdown, metadata = {}) {
-  suppressNextWatchEvent = true;
+  suppressWatchUntil = Date.now() + OWN_WRITE_SUPPRESSION_MS;
   await fs.promises.writeFile(filePath, markdown, "utf8");
+  watchedMtimeMs = fs.statSync(filePath).mtimeMs;
   await writeMetadata(filePath, metadata);
-  watchFile(filePath);
+  suppressWatchUntil = Date.now() + OWN_WRITE_SUPPRESSION_MS;
+  watchFile(filePath, watchedMtimeMs);
 }
 
 async function writeMetadata(filePath, metadata) {
@@ -220,16 +268,38 @@ function readFileResult(filePath, markdown) {
   };
 }
 
-function watchFile(filePath) {
+function watchFile(filePath, knownMtimeMs = null) {
+  if (knownMtimeMs !== null) {
+    watchedMtimeMs = knownMtimeMs;
+  }
+
   if (watchedPath === filePath && watcher) return;
 
   stopWatching();
   watchedPath = filePath;
   watcher = fs.watch(filePath, { persistent: false }, () => {
-    if (suppressNextWatchEvent) {
-      suppressNextWatchEvent = false;
+    let currentMtimeMs;
+    try {
+      currentMtimeMs = fs.statSync(filePath).mtimeMs;
+    } catch {
+      currentMtimeMs = null;
+    }
+
+    if (currentMtimeMs !== null && currentMtimeMs === watchedMtimeMs) {
       return;
     }
+
+    if (Date.now() < suppressWatchUntil) {
+      if (currentMtimeMs !== null) {
+        watchedMtimeMs = currentMtimeMs;
+      }
+      return;
+    }
+
+    if (currentMtimeMs !== null) {
+      watchedMtimeMs = currentMtimeMs;
+    }
+
     mainWindow?.webContents.send("document:external-change", {
       filePath,
       fileName: path.basename(filePath)
@@ -241,4 +311,5 @@ function stopWatching() {
   watcher?.close();
   watcher = null;
   watchedPath = null;
+  watchedMtimeMs = null;
 }

@@ -78,6 +78,7 @@ make check
 Implemented prototype features:
 
 - Markdown source editing
+- Blank startup and New Document workspace
 - CodeMirror-based Markdown editor
 - `markdown-it` preview rendering with GFM-aligned tables, strikethrough, and task lists
 - Split source/preview mode
@@ -85,13 +86,16 @@ Implemented prototype features:
 - Markdown toolbar actions using Lucide icon buttons with hover/focus tooltips
 - Word and character counts
 - Heading outline
-- Recent file labels
+- Recent file links, capped at the five most recently opened files
+- Collapsible left sidebar sections
 - Native Electron open/save/save-as dialogs
+- Unsaved new documents remain in memory until the first manual save
+- Shared icon-and-colour document status in the title bar and sidebar
 - Sidecar metadata creation on save
-- Native file watching through the Electron main process
-- Manual refresh and external-change warnings
+- Native file watching through the Electron main process with MarkLeaf-owned save events ignored by mtime tracking
+- Manual refresh and non-banner `Disk changed` status for external AI/script edits
 - Fixed native-app chrome with non-scrolling app bar, command bar, toolbar, pane headers, and status bar
-- Browser fallback import/download behavior when not running in Electron
+- Browser fallback open/download behavior when not running in Electron
 
 Known implementation gaps are tracked in [ISSUES.md](ISSUES.md).
 

@@ -113,7 +113,7 @@ The editor should therefore support:
 - External change detection.
 - Manual refresh.
 - Safe reload prompts when unsaved local edits exist.
-- Optional auto-refresh when no local unsaved edits exist.
+- Disk-changed status when an opened file is edited externally.
 - Clear conflict handling.
 - File watcher resilience.
 - Auto-save of user edits so the file on disk generally reflects the current working document.
@@ -123,7 +123,9 @@ Auto-save is part of the expected user experience. The app should behave more li
 The expected auto-save behaviour is similar in spirit to Google Docs:
 
 - Edits are saved after the user pauses typing or otherwise becomes idle.
-- The app clearly shows saving, saved, and save-error states.
+- Untitled/new documents remain unsaved in memory until the user explicitly chooses Save or Save As for the first time.
+- After a new document has a file path, auto-save applies normally to subsequent edits.
+- The app clearly shows new, unsaved, saving, saved, disk-changed, open-error, and save-error states.
 - Manual save remains available as an explicit sync/write-to-disk command.
 - Auto-save should reduce conflict risk, but external file changes must still be handled carefully.
 
@@ -453,8 +455,10 @@ The app must watch opened files for external changes.
 
 When external changes are detected:
 
-- If the local document has no pending unsaved changes, optionally auto-refresh.
-- If the local document has edits that have not yet been written to disk, show a conflict warning.
+- Set the document status to `Disk changed`.
+- Do not auto-reload the file into the editor.
+- Pause auto-save while `Disk changed` is active so the external version is not overwritten silently.
+- Keep manual Reload from disk available so the user explicitly pulls in the external or AI-generated version.
 - Allow user to compare at a simple level, reload, save as copy, or keep local version.
 - Provide a clear timestamp of the external change if available.
 
@@ -469,13 +473,13 @@ Expected workflow:
 1. User opens a Markdown file in the app.
 2. User asks an AI tool or script to revise the same file externally.
 3. The app detects that the file changed.
-4. User clicks refresh or accepts automatic reload.
-5. The updated Markdown renders in the app.
+4. The document status changes to `Disk changed` and auto-save pauses.
+5. User clicks Reload from disk to explicitly pull in the external version.
+6. The updated Markdown renders in the app.
 
 Optional future workflow:
 
 - The app can expose a watched workspace folder for AI tools.
-- The app can show a non-blocking banner: “File updated externally — reload?”
 - The app can preserve scroll position after reload where possible.
 
 ## 10. Markdown Compatibility
@@ -612,6 +616,17 @@ MarkLeaf should use a restrained, document-focused colour palette that supports 
 | Optional accent | `#D99A3D` | Small highlight only, e.g. save state / export badge |
 
 The optional accent should be used sparingly. The app should remain quiet and document-oriented rather than visually loud.
+
+Document status indicators should use consistent icon-and-text treatments in both the title bar and sidebar:
+
+| State | Icon direction | Colour | Text |
+| --- | --- | ---: | --- |
+| New clean document | File/new document | `#1F2933` | `New document` |
+| Unsaved changes | Caution / alert triangle | `#9A6A18` | `Unsaved` |
+| Saving | Spinner / circular loader | `#1F2933` | `Saving...` |
+| Saved | Check circle | `#2F6F5E` | `Saved` |
+| Disk changed | File warning | `#9A6A18` | `Disk changed` |
+| Save or open error | Alert circle | `#B42318` | `Save error` or `Open error` |
 
 ### 12.0.1 Brand Assets
 
@@ -922,7 +937,7 @@ The first implementation should optimize around one concrete workflow:
 3. User previews the rendered document with the selected CSS style.
 4. An external AI tool, script, or editor modifies the same Markdown file.
 5. MarkLeaf detects the external change.
-6. User reloads or accepts the updated file safely.
+6. MarkLeaf shows `Disk changed` without a banner and waits for the user to reload from disk.
 7. User exports the document to PDF and DOCX.
 
 This workflow should be used as the main acceptance path for early builds.
@@ -974,9 +989,10 @@ Required features:
 
 - File modification timestamp display.
 - Unsaved changes indicator.
+- Icon-and-colour document status shown consistently in the title bar and sidebar.
 - Reload from disk.
 - Save as copy.
-- Clear prompt when external changes are detected while local unsaved changes exist.
+- Clear non-banner `Disk changed` status when external changes are detected.
 
 ### 17.2 Diff Support
 
@@ -1013,6 +1029,7 @@ Suggested layout:
 - Command bar for file-level actions such as New, Open, Save, Save As, and Refresh.
 - Grouped toolbar with Markdown-compatible formatting controls, similar in spirit to lightweight Word controls.
 - Left sidebar for document metadata, outline, recent files, styles, or later file/workspace panels.
+- Left sidebar sections should be independently collapsible so the user can keep only the currently useful panels open.
 - Main editing area using pane headers and app-like split panes.
 - Right preview pane in split mode.
 - Bottom status bar.
@@ -1102,7 +1119,7 @@ Settings should include:
 - Default view mode.
 - Default CSS style.
 - Auto-save on/off, default on.
-- Auto-refresh external changes on/off.
+- Disk-changed detection on/off, default on.
 - Prompt before reload on/off.
 - Spellcheck on/off.
 - Line numbers on/off.
@@ -1171,7 +1188,9 @@ The repository should include a root-level `LICENSE` file containing the standar
 - Cross-platform Electron app shell.
 - TypeScript renderer frontend, with Svelte/SvelteKit deferred unless needed.
 - Open/save Markdown files.
-- Auto-save on changes, similar in spirit to modern living-document editors.
+- Startup and New Document should present a blank untitled workspace, not seeded sample Markdown.
+- Auto-save on changes for documents that already have a writable file path or browser file handle.
+- New unsaved documents should not trigger save-location prompts through auto-save.
 - Manual save command retained as an explicit sync/write-to-disk action.
 - Single Markdown file workflow.
 - Sidecar JSON metadata created beside the Markdown file once the file is saved or auto-saved through the editor.
@@ -1189,7 +1208,7 @@ The repository should include a root-level `LICENSE` file containing the standar
 - Page size and margin settings stored in sidecar metadata.
 - File watcher for external changes.
 - Manual reload from disk.
-- Basic conflict prompt when external changes occur during unsaved edits.
+- Basic non-banner `Disk changed` status when external changes occur.
 - Basic toolbar for Markdown-compatible formatting.
 - Toolbar-assisted table insertion.
 - Early export pipeline spike covering PDF and DOCX.
@@ -1199,7 +1218,11 @@ The repository should include a root-level `LICENSE` file containing the standar
 
 ### 25.2 MVP Should-Have
 
-- Recent files.
+- Recent files capped at five entries, ordered from most to least recent.
+- Recent file entries should open the file after user confirmation.
+- If the current document is a dirty unsaved new document, confirming a recent-file switch should prompt for the first save before opening the recent file.
+- If the current document is an already saved dirty file, confirming a recent-file switch should complete the pending save before opening the recent file.
+- Missing recent files should notify the user and then be removed from the list.
 - Word count.
 - Outline panel based on headings.
 - Basic table insertion.
@@ -1334,35 +1357,41 @@ The following decisions are assumed based on current user direction:
 9. GitHub Flavoured Markdown is the working default Markdown baseline.
 10. The app should focus first on a single Markdown file, not a full workspace model.
 11. The first golden workflow is open one `.md` file, edit it, preview it, accept/reload external AI or script changes safely, and export to PDF/DOCX.
-12. Auto-save on changes should be the default behaviour, similar in spirit to Google Docs, using idle/debounced saves with clear saving/saved/error states.
-13. A manual save command should still exist as an explicit sync/write-to-disk action.
-14. Sidecar JSON metadata should be created beside the Markdown file when a Markdown file is saved or auto-saved through the editor.
-15. Sidecar JSON metadata should store app-specific, document-specific, and export-specific settings.
-16. App-controlled metadata should live in the sidecar JSON rather than YAML frontmatter for the MVP.
-17. Plain CSS files should remain the universal visual styling layer.
-18. The app should ship with several basic predefined CSS files and a standard CSS template for consistency.
-19. Built-in CSS styles should use portable system font stacks by default.
-20. Users may specify other installed fonts through custom CSS.
-21. The app should include a basic lorem ipsum style preview/gallery showing common Markdown renderings.
-22. Page size, margins, orientation, export profile, and related document settings should live in the sidecar JSON, not in the CSS file.
-23. Raw HTML should not be a normal user-facing authoring method.
-24. DOCX export must be treated seriously, with the goal of producing a Word document that can be continued in Word.
-25. PDF export should represent the same styled document/export intent as DOCX, but as a fixed final format.
-26. Export quality should be validated early, including Pandoc and other viable options.
-27. User-provided reference DOCX templates are not assumed for the core product.
-28. Fonts should be supported through CSS where practical, with an export mapping layer considered for DOCX.
-29. Mermaid blocks should be preserved as fenced code blocks in the MVP, with visual Mermaid rendering marked as a good future feature.
-30. Advanced diffing, AI edit comparison, and Git integration are future features, not MVP requirements.
-31. The product name is **MarkLeaf**.
-32. The project should use the MIT License.
-33. The desktop application should use Electron so the project can stay primarily in TypeScript/JavaScript and use Node.js for native file system workflows.
-34. The first renderer implementation should remain a minimal TypeScript renderer bundled with esbuild; Svelte/SvelteKit is optional future work, not a current MVP blocker.
-35. Markdown mode should use CodeMirror 6, with undo/redo routed explicitly from Electron menus into CodeMirror.
-36. Preview rendering should use `markdown-it` with GFM-aligned extensions rather than a hand-rolled renderer.
-37. The UI should use fixed native-app chrome: top app bar, command bar, toolbar, pane headers, and status bar should not scroll with document content.
-38. Lucide should be the default icon system for app command and toolbar icons, with accessible labels and hover/focus tooltips on icon-only buttons.
-39. Brand/logo source files should live only under `assets/brand/`; generated `dist/` files are runtime build output and not source assets.
-40. Common project commands should be exposed through the root `Makefile` so development, browser fallback, checks, and cleanup stay consistent.
+12. Auto-save on changes should be the default behaviour for opened/saved files, similar in spirit to Google Docs, using idle/debounced saves with clear saving/saved/error states.
+13. Untitled/new documents should stay unsaved in memory until the first explicit Save or Save As, after which auto-save should take over.
+14. A manual save command should still exist as an explicit sync/write-to-disk action.
+15. Sidecar JSON metadata should be created beside the Markdown file when a Markdown file is saved or auto-saved through the editor.
+16. Sidecar JSON metadata should store app-specific, document-specific, and export-specific settings.
+17. App-controlled metadata should live in the sidecar JSON rather than YAML frontmatter for the MVP.
+18. Plain CSS files should remain the universal visual styling layer.
+19. The app should ship with several basic predefined CSS files and a standard CSS template for consistency.
+20. Built-in CSS styles should use portable system font stacks by default.
+21. Users may specify other installed fonts through custom CSS.
+22. The app should include a basic lorem ipsum style preview/gallery showing common Markdown renderings.
+23. Page size, margins, orientation, export profile, and related document settings should live in the sidecar JSON, not in the CSS file.
+24. Raw HTML should not be a normal user-facing authoring method.
+25. DOCX export must be treated seriously, with the goal of producing a Word document that can be continued in Word.
+26. PDF export should represent the same styled document/export intent as DOCX, but as a fixed final format.
+27. Export quality should be validated early, including Pandoc and other viable options.
+28. User-provided reference DOCX templates are not assumed for the core product.
+29. Fonts should be supported through CSS where practical, with an export mapping layer considered for DOCX.
+30. Mermaid blocks should be preserved as fenced code blocks in the MVP, with visual Mermaid rendering marked as a good future feature.
+31. Advanced diffing, AI edit comparison, and Git integration are future features, not MVP requirements.
+32. The product name is **MarkLeaf**.
+33. The project should use the MIT License.
+34. The desktop application should use Electron so the project can stay primarily in TypeScript/JavaScript and use Node.js for native file system workflows.
+35. The first renderer implementation should remain a minimal TypeScript renderer bundled with esbuild; Svelte/SvelteKit is optional future work, not a current MVP blocker.
+36. Markdown mode should use CodeMirror 6, with undo/redo routed explicitly from Electron menus into CodeMirror.
+37. Preview rendering should use `markdown-it` with GFM-aligned extensions rather than a hand-rolled renderer.
+38. The UI should use fixed native-app chrome: top app bar, command bar, toolbar, pane headers, and status bar should not scroll with document content.
+39. Lucide should be the default icon system for app command and toolbar icons, with accessible labels and hover/focus tooltips on icon-only buttons.
+40. Brand/logo source files should live only under `assets/brand/`; generated `dist/` files are runtime build output and not source assets.
+41. Common project commands should be exposed through the root `Makefile` so development, browser fallback, checks, and cleanup stay consistent.
+42. Startup and New Document should clear the workspace to a blank untitled Markdown document; sample content belongs in examples or style previews, not the live editor by default.
+43. Recent files should be path-backed links capped at five entries; opening a recent file should confirm first, save or prompt to save the current dirty document, and remove missing files after notifying the user.
+44. Document status should be rendered through a shared icon-and-colour status component in both the title bar and sidebar.
+45. External file edits, including AI/script edits, should set `Disk changed`, pause auto-save, and wait for an explicit Reload from disk.
+46. The Electron watcher should ignore MarkLeaf-owned saves by tracking known file modification times so autosave does not falsely trigger `Disk changed`.
 
 ## 29. Deferred Design Questions
 
