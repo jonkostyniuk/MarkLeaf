@@ -566,7 +566,7 @@ The toolbar should provide common document controls while inserting or modifying
 - Strikethrough, if supported
 - Inline code
 - Link insertion via an `Insert Link` dialog with `Text to display`, explicit `Address` and `Email` modes, and smart Markdown link normalization.
-- Image insertion via an `Insert Image` dialog with `Alt text`, native image picker, and drag/drop support.
+- Image insertion via an `Insert Image` dialog with `Alt text`, native image picker, drag/drop support, and a temporary selected-image thumbnail.
 - Blockquote
 - Bullet list
 - Numbered list
@@ -590,7 +590,7 @@ Frontmatter should remain out of the main app metadata flow for MVP because app-
 
 Rendered links in the Styled pane should not navigate the Electron app window away from MarkLeaf. Web and email links should open externally through the operating system; unsupported local/document links should be blocked until a deliberate local-link workflow is designed.
 
-Local image insertion should require the Markdown document to be saved first so the app has a stable document-relative asset location. Dropped images should be copied into a sibling `<document-name>.assets/` folder and inserted as relative Markdown image references. Picker-selected images already inside the document folder tree may be linked relatively in place; external picker-selected images should be copied beside the document by default. MVP supported image types are PNG, JPG/JPEG, GIF, WebP, and SVG.
+Local image insertion should require the Markdown document to be saved first so the app has a stable document-relative asset location. Image insertion is capped at one image per dialog submission; additional file selections or drops replace the pending image. The dialog should prominently explain before the alt-text field that inserted images are copied into a sibling `<filename>.md.assets/` folder and inserted as relative Markdown image references. The asset folder should include the full Markdown filename to mirror sidecar metadata naming, for example `memo.md.assets/` beside `memo.md` and `memo.md.meta.json`. A selected image should appear as a temporary thumbnail; hovering or focusing the thumbnail should make clear that clicking it removes the pending image. MVP supported image types are PNG, JPG/JPEG, GIF, WebP, and SVG.
 
 ### 11.2 Document Structure Controls
 
@@ -927,7 +927,7 @@ Future workspace features could include:
 - Folder tree.
 - Recent files.
 - Search across files.
-- Assets folder support.
+- Workspace-level assets folder support.
 - Relative links.
 - Image references.
 - Multi-document export.
@@ -1304,6 +1304,12 @@ Deliverables:
 - Settings.
 - Outline panel.
 
+Current baseline status:
+
+- Implemented: file watcher, unsaved change handling, toolbar controls, recent files, word/character count, outline panel, shared save/disk status, link dialog, image dialog, and resizable split panes.
+- Partially implemented: conflict handling through `Disk changed` status and manual Reload from disk; a richer conflict prompt/diff is deferred.
+- Remaining: settings UI and full sidecar schema controls.
+
 ### 26.4 Phase 3 — Export System
 
 Goal: Produce credible professional outputs.
@@ -1413,6 +1419,9 @@ The following decisions are assumed based on current user direction:
 44. Document status should be rendered through a shared icon-and-colour status component in both the title bar and sidebar.
 45. External file edits, including AI/script edits, should set `Disk changed`, pause auto-save, and wait for an explicit Reload from disk.
 46. The Electron watcher should ignore MarkLeaf-owned saves by tracking known file modification times so autosave does not falsely trigger `Disk changed`.
+47. Link insertion should use a dialog with display text plus explicit Address/Email modes; rendered web and email links should open through the operating system rather than navigating the Electron app window.
+48. Image insertion should use a dialog, support one pending image at a time, require a saved Markdown file first, show a removable temporary thumbnail, and copy inserted images into `[filename].md.assets/`.
+49. Existing link/image references can be inserted through dialogs now, but edit-existing-reference workflows remain deferred.
 
 ## 29. Deferred Design Questions
 

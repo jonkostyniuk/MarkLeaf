@@ -66,6 +66,36 @@ Next step:
 
 ## Resolved
 
+## ISSUE-015: Link and image insertion dialogs
+
+Status: resolved
+Area: editor
+Raised in: 2026-05-24
+Resolved in: 2026-05-24
+Owner: shared
+
+Context:
+- Toolbar link and image actions initially inserted generic Markdown snippets.
+- Link clicks in the Styled pane could navigate the Electron app window away from MarkLeaf.
+- Local image insertion needed a predictable, portable file convention beside the source Markdown file.
+
+Question:
+- What should the MVP link and image insertion workflows do?
+
+Impact:
+- Generic snippets and in-app link navigation made the editor feel incomplete.
+- Ad hoc image paths could break previews, exports, or file portability.
+
+Resolution:
+- Added an `Insert Link` dialog with display text, explicit Address/Email modes, smart address normalization, and external OS opening for Styled-pane web/email links.
+- Added an `Insert Image` dialog that inserts one image at a time with alt text, native file picker, drag/drop, and a removable temporary thumbnail.
+- Required unsaved documents to be saved before local image insertion so assets have a stable document-relative location.
+- Standardized local image copies into a sibling `[filename].md.assets/` folder to mirror `[filename].md.meta.json` sidecar naming.
+- Updated the Styled pane to resolve document-relative image paths for preview.
+
+Next step:
+- Add edit-existing-link and edit-existing-image-reference workflows later.
+
 ## ISSUE-013: Watcher false-positive disk changed state after autosave
 
 Status: resolved

@@ -238,6 +238,7 @@ app.innerHTML = `
           <h2 id="imageDialogTitle">Insert Image</h2>
         </header>
         <div class="modal-body">
+          <p class="dialog-note">Images are inserted one at a time and copied into a sibling <code>[filename].md.assets</code> folder beside the saved Markdown file.</p>
           <label class="form-field">
             <span>Alt text</span>
             <input id="imageAltInput" type="text" autocomplete="off">
@@ -248,6 +249,10 @@ app.innerHTML = `
             <div id="imageDropZone" class="drop-zone" tabindex="0">
               <span>Drop an image file here</span>
             </div>
+            <button id="imageThumbButton" type="button" class="image-thumb" data-image-action="remove" title="Click to remove selected image" hidden>
+              <img id="imageThumbPreview" alt="">
+              <span id="imageThumbLabel"></span>
+            </button>
             <p id="imagePathStatus" class="field-help">No image selected</p>
           </div>
         </div>
@@ -286,6 +291,9 @@ const imageDialog = document.querySelector("#imageDialog");
 const imageForm = document.querySelector("#imageForm");
 const imageAltInput = document.querySelector("#imageAltInput");
 const imageDropZone = document.querySelector("#imageDropZone");
+const imageThumbButton = document.querySelector("#imageThumbButton");
+const imageThumbPreview = document.querySelector("#imageThumbPreview");
+const imageThumbLabel = document.querySelector("#imageThumbLabel");
 const imagePathStatus = document.querySelector("#imagePathStatus");
 
 initialize();
@@ -364,6 +372,11 @@ function bindEvents() {
       return;
     }
 
+    if (target.dataset.imageAction === "remove") {
+      clearSelectedImage();
+      return;
+    }
+
     if (target.dataset.action) {
       handleAction(target.dataset.action);
     }
@@ -429,7 +442,7 @@ function bindEvents() {
   imageDropZone.addEventListener("drop", (event) => {
     event.preventDefault();
     imageDropZone.classList.remove("drag-over");
-    handleDroppedImage(event.dataTransfer?.files?.[0]);
+    handleDroppedImage(event.dataTransfer?.files);
   });
 
   window.addEventListener("keydown", (event) => {
@@ -1059,6 +1072,7 @@ async function openImageDialog() {
   state.imageAsset = null;
   imageAltInput.value = selectedText || "";
   imagePathStatus.textContent = "No image selected";
+  renderImageSelection();
   imageDialog.hidden = false;
 
   window.setTimeout(() => {
@@ -1085,6 +1099,7 @@ function closeImageDialog() {
   state.imageSelection = null;
   state.imageAsset = null;
   imageDropZone.classList.remove("drag-over");
+  renderImageSelection();
   editorView.focus();
 }
 
@@ -1097,10 +1112,14 @@ async function chooseImageForDialog() {
     return;
   }
 
-  prepareImageForDialog(result.filePath, "choose");
+  prepareImageForDialog(result.filePath, "choose", getFileNameFromPath(result.filePath));
 }
 
-async function handleDroppedImage(file) {
+async function handleDroppedImage(files) {
+  if (files?.length > 1) {
+    imagePathStatus.textContent = "Only one image can be inserted at a time; using the first dropped file";
+  }
+  const file = files?.[0];
   if (!file) return;
   const sourcePath = desktopApi.getDroppedFilePath?.(file);
   if (!sourcePath) {
@@ -1108,14 +1127,36 @@ async function handleDroppedImage(file) {
     return;
   }
 
-  prepareImageForDialog(sourcePath, "drop");
+  prepareImageForDialog(sourcePath, "drop", file.name || getFileNameFromPath(sourcePath));
 }
 
-function prepareImageForDialog(sourcePath, mode) {
-  state.imageAsset = { sourcePath, mode };
-  imagePathStatus.textContent = mode === "drop"
-    ? "Image selected; it will be copied beside the document on insert"
-    : "Image selected; external files will be copied beside the document on insert";
+function prepareImageForDialog(sourcePath, mode, name) {
+  state.imageAsset = { sourcePath, mode, name: name || getFileNameFromPath(sourcePath) };
+  imagePathStatus.textContent = "Selected image will be copied beside the document on insert";
+  renderImageSelection();
+}
+
+function clearSelectedImage() {
+  state.imageAsset = null;
+  imagePathStatus.textContent = "No image selected";
+  renderImageSelection();
+}
+
+function renderImageSelection() {
+  if (!state.imageAsset?.sourcePath) {
+    imageThumbButton.hidden = true;
+    imageThumbPreview.removeAttribute("src");
+    imageThumbLabel.textContent = "";
+    return;
+  }
+
+  imageThumbButton.hidden = false;
+  imageThumbPreview.src = desktopApi.resolveDocumentAssetUrl(state.filePath, state.imageAsset.sourcePath);
+  imageThumbLabel.textContent = state.imageAsset.name;
+}
+
+function getFileNameFromPath(filePath) {
+  return (filePath || "").split(/[\\/]/).filter(Boolean).pop() || "Selected image";
 }
 
 async function insertConfiguredImage() {

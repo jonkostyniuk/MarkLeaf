@@ -853,6 +853,22 @@ h1 {
   padding: 14px 16px;
 }
 
+.dialog-note {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--chrome);
+  color: var(--deep-ink);
+  padding: 9px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.dialog-note code {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
 .form-field {
   display: grid;
   gap: 6px;
@@ -904,6 +920,59 @@ h1 {
   font-size: 12px;
   font-weight: 400;
   overflow-wrap: anywhere;
+}
+
+.image-thumb {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--deep-ink);
+  text-align: left;
+}
+
+.image-thumb[hidden] {
+  display: none;
+}
+
+.image-thumb img {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--chrome);
+}
+
+.image-thumb span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.image-thumb::after {
+  content: "Click to remove";
+  position: absolute;
+  right: 8px;
+  bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  opacity: 0;
+}
+
+.image-thumb:hover::after,
+.image-thumb:focus-visible::after {
+  opacity: 1;
 }
 
 .modal-actions {

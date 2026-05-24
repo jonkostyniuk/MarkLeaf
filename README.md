@@ -55,6 +55,8 @@ The full product goal includes a direct editable Word-lite mode where Markdown s
 
 This repository currently includes the first-pass Electron app for the Phase 1/2 editor workflow. It is still an MVP prototype, not a packaged production desktop app.
 
+The current baseline is focused on the core editor loop: open or create one Markdown file, edit in Markdown or split mode, preview the styled output, save with sidecar metadata, detect external disk changes, and use native dialogs for common Markdown insertions.
+
 Run the Electron app locally with:
 
 ```sh
@@ -80,7 +82,7 @@ Implemented prototype features:
 - Markdown toolbar actions using Lucide icon buttons with hover/focus tooltips
 - Insert Link dialog with display text, explicit Address/Email modes, smart normalization, and Markdown insertion
 - Styled-pane web and email links open externally through the OS instead of navigating the app window
-- Insert Image dialog with alt text, native image picker, drag/drop, save-first handling, and portable beside-document asset copying
+- Insert Image dialog for one image at a time, with alt text, native image picker, drag/drop, selected-image thumbnail, save-first handling, and `[filename].md.assets` beside-document asset copying
 - Paragraph through H6 block formatting, with the outline currently limited to H1-H3
 - Block format dropdown follows the current cursor line
 - Word and character counts
@@ -117,6 +119,8 @@ Use `make help` for the maintained command list. The most common commands are:
 ## Assets
 
 Brand and logo source files live in [assets/brand](assets/brand). This is the source-of-truth location for logo assets.
+
+Document image assets created through Insert Image are copied beside the saved Markdown document in a sibling `[filename].md.assets/` folder. This mirrors the sidecar metadata convention, where MarkLeaf writes `[filename].md.meta.json`.
 
 Generated output lives in `dist/` and should not be edited or reviewed as source. During local development, the built renderer references source assets from `assets/brand/` rather than copying logos into `dist/`.
 

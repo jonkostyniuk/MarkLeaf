@@ -264,8 +264,6 @@ function openAllowedExternalUrl(url) {
 async function prepareImageAsset(payload = {}) {
   const sourcePath = payload.sourcePath;
   const documentPath = payload.documentPath;
-  const mode = payload.mode === "drop" ? "drop" : "choose";
-
   if (!documentPath) {
     return { ok: false, error: "Save the Markdown document before inserting local images." };
   }
@@ -285,23 +283,20 @@ async function prepareImageAsset(payload = {}) {
 
   const documentDir = path.dirname(documentPath);
   const normalizedSource = path.resolve(sourcePath);
-  const shouldCopy = mode === "drop" || !isPathInside(normalizedSource, documentDir);
-  const finalPath = shouldCopy
-    ? await copyImageBesideDocument(normalizedSource, documentPath)
-    : normalizedSource;
+  const finalPath = await copyImageBesideDocument(normalizedSource, documentPath);
 
   return {
     ok: true,
     filePath: finalPath,
     markdownPath: toMarkdownRelativePath(documentDir, finalPath),
-    copied: shouldCopy
+    copied: true
   };
 }
 
 async function copyImageBesideDocument(sourcePath, documentPath) {
   const documentDir = path.dirname(documentPath);
-  const documentStem = path.basename(documentPath, path.extname(documentPath));
-  const assetDir = path.join(documentDir, `${documentStem}.assets`);
+  const documentFileName = path.basename(documentPath);
+  const assetDir = path.join(documentDir, `${documentFileName}.assets`);
   await fs.promises.mkdir(assetDir, { recursive: true });
 
   const parsed = path.parse(sourcePath);
@@ -322,11 +317,6 @@ async function getAvailableAssetPath(assetDir, baseName, extension) {
       return candidate;
     }
   }
-}
-
-function isPathInside(candidatePath, parentPath) {
-  const relativePath = path.relative(path.resolve(parentPath), path.resolve(candidatePath));
-  return Boolean(relativePath) && !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
 }
 
 function toMarkdownRelativePath(documentDir, filePath) {
