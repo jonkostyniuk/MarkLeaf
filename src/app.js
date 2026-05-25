@@ -199,8 +199,11 @@ app.innerHTML = `
 
     <footer class="statusbar">
       <span id="pathStatus"></span>
-      <span id="modeStatus"></span>
-      <span id="watchStatus"></span>
+      <span class="statusbar-right">
+        <span id="modeStatus"></span>
+        <span class="statusbar-separator" aria-hidden="true">|</span>
+        <span id="watchStatus"></span>
+      </span>
     </footer>
 
     <div id="linkDialog" class="modal-backdrop" hidden>

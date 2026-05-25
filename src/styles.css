@@ -814,6 +814,25 @@ h1 {
   overflow: hidden;
 }
 
+.statusbar > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusbar-right {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.statusbar-separator {
+  color: #9fb2ac;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
