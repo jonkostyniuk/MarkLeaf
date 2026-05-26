@@ -3,7 +3,7 @@
 ## Details
 
 - **Date:** 2026-05-23
-- **Attendees:** Alpha, Beta, Gamma
+- **Attendees:** Alpha, Beta, Gamma, Delta
 - **Topic:** Editor workflow review
 
 ## Agenda

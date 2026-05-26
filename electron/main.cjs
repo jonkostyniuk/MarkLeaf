@@ -353,23 +353,74 @@ async function writeDocument(filePath, markdown, metadata = {}) {
 
 async function writeMetadata(filePath, metadata) {
   const metaPath = `${filePath}.meta.json`;
-  const sidecar = {
-    schemaVersion: 1,
+  const existing = readMetadata(filePath);
+  const sidecar = mergeMetadata(existing, metadata);
+
+  await fs.promises.writeFile(metaPath, `${JSON.stringify(sidecar, null, 2)}\n`, "utf8");
+}
+
+function mergeMetadata(existing = {}, metadata = {}) {
+  return {
+    ...existing,
+    schemaVersion: "1.0",
     style: {
-      id: metadata?.styleId || "memo"
+      ...(existing.style || {}),
+      id: metadata?.styleId || existing.style?.id || "memo",
+      cssPath: existing.style?.cssPath || ""
     },
     view: {
-      mode: metadata?.mode || "split",
-      wordWrap: true
+      ...(existing.view || {}),
+      mode: metadata?.mode || existing.view?.mode || "split",
+      wordWrap: metadata?.wordWrap ?? existing.view?.wordWrap ?? true,
+      lastScrollPosition: existing.view?.lastScrollPosition || 0,
+      foldedHeadings: Array.isArray(existing.view?.foldedHeadings) ? existing.view.foldedHeadings : []
+    },
+    document: {
+      title: "",
+      author: "",
+      subject: "",
+      keywords: [],
+      notes: "",
+      ...(existing.document || {})
+    },
+    page: {
+      size: "letter",
+      orientation: "portrait",
+      ...(existing.page || {}),
+      margins: {
+        top: "1in",
+        right: "1in",
+        bottom: "1in",
+        left: "1in",
+        ...(existing.page?.margins || {})
+      }
     },
     export: {
-      pdf: {},
-      docx: {}
+      ...(existing.export || {}),
+      pdf: {
+        enabled: true,
+        includePageNumbers: false,
+        profile: "standard",
+        ...(existing.export?.pdf || {})
+      },
+      docx: {
+        enabled: true,
+        templatePath: "",
+        mapCssFonts: true,
+        ...(existing.export?.docx || {})
+      }
     },
     updatedAt: new Date().toISOString()
   };
+}
 
-  await fs.promises.writeFile(metaPath, `${JSON.stringify(sidecar, null, 2)}\n`, "utf8");
+function readMetadata(filePath) {
+  const metaPath = `${filePath}.meta.json`;
+  try {
+    return JSON.parse(fs.readFileSync(metaPath, "utf8"));
+  } catch {
+    return {};
+  }
 }
 
 function readFileResult(filePath, markdown) {
@@ -379,7 +430,8 @@ function readFileResult(filePath, markdown) {
     filePath,
     fileName: path.basename(filePath),
     markdown: markdown ?? fs.readFileSync(filePath, "utf8"),
-    lastModified: stats.mtimeMs
+    lastModified: stats.mtimeMs,
+    metadata: readMetadata(filePath)
   };
 }
 

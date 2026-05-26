@@ -418,9 +418,23 @@ Example sidecar structure:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": "1.0",
   "style": {
-    "cssPath": "styles/technical-memo.css"
+    "id": "memo",
+    "cssPath": ""
+  },
+  "view": {
+    "mode": "split",
+    "wordWrap": true,
+    "lastScrollPosition": 0,
+    "foldedHeadings": []
+  },
+  "document": {
+    "title": "",
+    "author": "",
+    "subject": "",
+    "keywords": [],
+    "notes": ""
   },
   "page": {
     "size": "letter",
@@ -434,18 +448,21 @@ Example sidecar structure:
   },
   "export": {
     "pdf": {
-      "includePageNumbers": true
+      "enabled": true,
+      "includePageNumbers": false,
+      "profile": "standard"
     },
     "docx": {
+      "enabled": true,
+      "templatePath": "",
       "mapCssFonts": true
     }
   },
-  "view": {
-    "mode": "split",
-    "wordWrap": true
-  }
+  "updatedAt": ""
 }
 ```
+
+The development reference for this structure lives in `templates/markleaf-sidecar.template.jsonc`.
 
 Sidecar metadata must never be required to understand or edit the Markdown file.
 
@@ -729,6 +746,15 @@ same-folder-as-document/styles/
 
 CSS should remain a universal, portable styling layer.
 
+### 12.3.1 Style Reference
+
+`STYLES.md` is the current development reference for a first JKTS-inspired document style. It captures Word-to-CSS layout guidance and extracted JKTS heading colours:
+
+- JKTS blue: `#2E5E94`
+- JKTS green: `#29A94F`
+
+This reference should inform future built-in CSS styles, but it is not itself an active app style until converted into a real CSS file and registered in the style selector.
+
 ### 12.4 Style Scope
 
 CSS styles should affect rendered output only, not the underlying Markdown.
@@ -745,6 +771,8 @@ Styles may define:
 - Print appearance
 
 Styles should not define app-specific document settings such as selected page size or saved export profile. Those should live in the sidecar JSON metadata.
+
+For the current sidecar schema, `style.cssPath` should point to an active CSS file when custom CSS support exists. `style.id` should remain the built-in fallback when `cssPath` is empty, missing, or invalid.
 
 ### 12.5 Page and Export Settings
 
@@ -1313,9 +1341,9 @@ Deliverables:
 
 Current baseline status:
 
-- Implemented: file watcher, unsaved change handling, toolbar controls, recent files, word/character count, outline panel, shared save/disk status, link dialog, image dialog, and resizable split panes.
+- Implemented: file watcher, unsaved change handling, toolbar controls, recent files, word/character count, outline panel, shared save/disk status, link dialog, image dialog, resizable split panes, and sidecar read/write round trip.
 - Partially implemented: conflict handling through `Disk changed` status and manual Reload from disk; a richer conflict prompt/diff is deferred.
-- Remaining: settings UI and full sidecar schema controls.
+- Remaining: settings UI and export/page settings activation.
 
 ### 26.4 Phase 3 — Export System
 
@@ -1395,42 +1423,44 @@ The following decisions are assumed based on current user direction:
 13. Untitled/new documents should stay unsaved in memory until the first explicit Save or Save As, after which auto-save should take over.
 14. A manual save command should still exist as an explicit sync/write-to-disk action.
 15. Sidecar JSON metadata should be created beside the Markdown file when a Markdown file is saved or auto-saved through the editor.
-16. Sidecar JSON metadata should store app-specific, document-specific, and export-specific settings.
+16. Sidecar JSON metadata should store app-specific, document-specific, and export-specific settings using the `"1.0"` schema reference in `templates/markleaf-sidecar.template.jsonc`.
 17. App-controlled metadata should live in the sidecar JSON rather than YAML frontmatter for the MVP.
 18. Plain CSS files should remain the universal visual styling layer.
-19. The app should ship with several basic predefined CSS files and a standard CSS template for consistency.
-20. Built-in CSS styles should use portable system font stacks by default.
-21. Users may specify other installed fonts through custom CSS.
-22. The app should include a basic lorem ipsum style preview/gallery showing common Markdown renderings.
-23. Page size, margins, orientation, export profile, and related document settings should live in the sidecar JSON, not in the CSS file.
-24. Raw HTML should not be a normal user-facing authoring method.
-25. DOCX export must be treated seriously, with the goal of producing a Word document that can be continued in Word.
-26. PDF export should represent the same styled document/export intent as DOCX, but as a fixed final format.
-27. Export quality should be validated early, including Pandoc and other viable options.
-28. User-provided reference DOCX templates are not assumed for the core product.
-29. Fonts should be supported through CSS where practical, with an export mapping layer considered for DOCX.
-30. Mermaid blocks should be preserved as fenced code blocks in the MVP, with visual Mermaid rendering marked as a good future feature.
-31. Advanced diffing, AI edit comparison, and Git integration are future features, not MVP requirements.
-32. The product name is **MarkLeaf**.
-33. The project should use the MIT License.
-34. The desktop application should use Electron so the project can stay primarily in TypeScript/JavaScript and use Node.js for native file system workflows.
-35. The first renderer implementation should remain a minimal TypeScript renderer bundled with esbuild; Svelte/SvelteKit is optional future work, not a current MVP blocker.
-36. Markdown mode should use CodeMirror 6, with undo/redo routed explicitly from Electron menus into CodeMirror.
-37. Preview rendering should use `markdown-it` with GFM-aligned extensions rather than a hand-rolled renderer.
-38. The UI should use fixed native-app chrome: top app bar, command bar, toolbar, pane headers, and status bar should not scroll with document content.
-39. Lucide should be the default icon system for app command and toolbar icons, with accessible labels and hover/focus tooltips on icon-only buttons.
-40. Brand/logo source files should live only under `assets/brand/`; generated `dist/` files are runtime build output and not source assets.
-41. Common project commands should be exposed through the root `Makefile` so Electron development, checks, and cleanup stay consistent.
-42. Startup and New Document should clear the workspace to a blank untitled Markdown document; sample content belongs in examples or style previews, not the live editor by default.
-43. Recent files should be path-backed links capped at five entries; opening a recent file should confirm first, save or prompt to save the current dirty document, and remove missing files after notifying the user.
-44. Document status should be rendered through a shared icon-and-colour status component in both the title bar and sidebar.
-45. External file edits, including AI/script edits, should set `Disk changed`, pause auto-save, and wait for an explicit Reload from disk.
-46. The Electron watcher should ignore MarkLeaf-owned saves by tracking known file modification times so autosave does not falsely trigger `Disk changed`.
-47. Link insertion should use a dialog with display text plus explicit Address/Email modes; rendered web and email links should open through the operating system rather than navigating the Electron app window.
-48. Image insertion should use a dialog, support one pending image at a time, require a saved Markdown file first, show a removable temporary thumbnail, and copy inserted images into `[filename].md.assets/`.
-49. Existing link/image references can be inserted through dialogs now, but edit-existing-reference workflows remain deferred.
-50. Local alpha testing should use `make package-mac` to produce an unsigned `.app`; DMG, signing, notarization, and final production icon treatment remain follow-up packaging work.
-51. The alpha macOS `.app` should use an `.icns` generated from the current PNG logo concept so standalone builds are identifiable in Finder and the Dock.
+19. `STYLES.md` is the current development reference for the first JKTS-inspired CSS style, but it must be converted into a real CSS file before appearing in the app style selector.
+20. The app should ship with several basic predefined CSS files and a standard CSS template for consistency.
+21. Built-in CSS styles should use portable system font stacks by default.
+22. Users may specify other installed fonts through custom CSS.
+23. The app should include a basic lorem ipsum style preview/gallery showing common Markdown renderings.
+24. Page size, margins, orientation, export profile, and related document settings should live in the sidecar JSON, not in the CSS file.
+25. Raw HTML should not be a normal user-facing authoring method.
+26. DOCX export must be treated seriously, with the goal of producing a Word document that can be continued in Word.
+27. PDF export should represent the same styled document/export intent as DOCX, but as a fixed final format.
+28. Export quality should be validated early, including Pandoc and other viable options.
+29. User-provided reference DOCX templates are not assumed for the core product.
+30. Fonts should be supported through CSS where practical, with an export mapping layer considered for DOCX.
+31. Mermaid blocks should be preserved as fenced code blocks in the MVP, with visual Mermaid rendering marked as a good future feature.
+32. Advanced diffing, AI edit comparison, and Git integration are future features, not MVP requirements.
+33. The product name is **MarkLeaf**.
+34. The project should use the MIT License.
+35. The desktop application should use Electron so the project can stay primarily in TypeScript/JavaScript and use Node.js for native file system workflows.
+36. The first renderer implementation should remain a minimal TypeScript renderer bundled with esbuild; Svelte/SvelteKit is optional future work, not a current MVP blocker.
+37. Markdown mode should use CodeMirror 6, with undo/redo routed explicitly from Electron menus into CodeMirror.
+38. Preview rendering should use `markdown-it` with GFM-aligned extensions rather than a hand-rolled renderer.
+39. The UI should use fixed native-app chrome: top app bar, command bar, toolbar, pane headers, and status bar should not scroll with document content.
+40. Lucide should be the default icon system for app command and toolbar icons, with accessible labels and hover/focus tooltips on icon-only buttons.
+41. Brand/logo source files should live only under `assets/brand/`; generated `dist/` files are runtime build output and not source assets.
+42. Common project commands should be exposed through the root `Makefile` so Electron development, checks, and cleanup stay consistent.
+43. Startup and New Document should clear the workspace to a blank untitled Markdown document; sample content belongs in examples or style previews, not the live editor by default.
+44. Recent files should be path-backed links capped at five entries; opening a recent file should confirm first, save or prompt to save the current dirty document, and remove missing files after notifying the user.
+45. Document status should be rendered through a shared icon-and-colour status component in both the title bar and sidebar.
+46. External file edits, including AI/script edits, should set `Disk changed`, pause auto-save, and wait for an explicit Reload from disk.
+47. The Electron watcher should ignore MarkLeaf-owned saves by tracking known file modification times so autosave does not falsely trigger `Disk changed`.
+48. Link insertion should use a dialog with display text plus explicit Address/Email modes; rendered web and email links should open through the operating system rather than navigating the Electron app window.
+49. Image insertion should use a dialog, support one pending image at a time, require a saved Markdown file first, show a removable temporary thumbnail, and copy inserted images into `[filename].md.assets/`.
+50. Existing link/image references can be inserted through dialogs now, but edit-existing-reference workflows remain deferred.
+51. Local alpha testing should use `make package-mac` to produce an unsigned `.app`; DMG, signing, notarization, and final production icon treatment remain follow-up packaging work.
+52. The alpha macOS `.app` should use an `.icns` generated from the current PNG logo concept so standalone builds are identifiable in Finder and the Dock.
+53. Opening a Markdown file should read its sidecar if present and apply supported fields; saving should preserve unsupported sidecar sections where practical.
 
 ## 29. Deferred Design Questions
 

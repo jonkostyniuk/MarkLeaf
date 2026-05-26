@@ -882,10 +882,13 @@ async function saveWithDesktopApi(saveAsDocument, options = {}) {
 
 function applyOpenedDocument(result) {
   clearAutoSave();
+  const metadata = result.metadata || {};
   state.filePath = result.filePath || null;
   state.fileName = result.fileName || "Untitled.md";
   state.markdown = result.markdown || "";
   state.lastModified = result.lastModified || null;
+  state.selectedStyle = getSupportedStyleId(metadata.style?.id);
+  state.mode = getSupportedMode(metadata.view?.mode);
   state.dirty = false;
   state.saving = false;
   state.saveError = "";
@@ -893,6 +896,14 @@ function applyOpenedDocument(result) {
   resetEditorDocument(state.markdown);
   addRecentFile(result);
   render();
+}
+
+function getSupportedStyleId(styleId) {
+  return styles[styleId] ? styleId : "memo";
+}
+
+function getSupportedMode(mode) {
+  return mode === "markdown" || mode === "split" ? mode : "split";
 }
 
 function bindDesktopEvents() {

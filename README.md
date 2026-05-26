@@ -93,6 +93,7 @@ Implemented prototype features:
 - Unsaved new documents remain in memory until the first manual save
 - Shared icon-and-colour document status in the title bar and sidebar
 - Sidecar metadata creation on save
+- Sidecar metadata read/write round trip with preserved unsupported fields
 - Native file watching through the Electron main process with MarkLeaf-owned save events ignored by mtime tracking
 - Manual refresh and non-banner `Disk changed` status for external AI/script edits
 - Fixed native-app chrome with non-scrolling app bar, command bar, toolbar, pane headers, and status bar
@@ -104,6 +105,8 @@ Known implementation gaps are tracked in [ISSUES.md](ISSUES.md).
 
 - [markleaf-spec.md](markleaf-spec.md): product direction, technical architecture, development phases, design principles, and MVP scope.
 - [ISSUES.md](ISSUES.md): running backlog for unresolved questions, implementation blockers, follow-up decisions, and resolved project notes.
+- [STYLES.md](STYLES.md): early document-style reference based on Word layout guidance and extracted JKTS brand colours.
+- [templates/markleaf-sidecar.template.jsonc](templates/markleaf-sidecar.template.jsonc): commented development reference for sidecar metadata.
 - [LICENSE](LICENSE): MIT License for the project.
 
 ## Common Commands
@@ -123,6 +126,8 @@ Use `make help` for the maintained command list. The most common commands are:
 Brand and logo source files live in [assets/brand](assets/brand). This is the source-of-truth location for logo assets.
 
 The local macOS package icon is generated from `assets/brand/markleaf-logo-concept-1.png` into `build/icons/markleaf.icns` during `make package-mac`.
+
+Document style guidance currently lives in [STYLES.md](STYLES.md). That file is a reference for future CSS themes; it is not yet wired into the built-in style dropdown.
 
 Document image assets created through Insert Image are copied beside the saved Markdown document in a sibling `[filename].md.assets/` folder. This mirrors the sidecar metadata convention, where MarkLeaf writes `[filename].md.meta.json`.
 

@@ -43,6 +43,27 @@ Next step:
 
 ## Open
 
+## ISSUE-018: Convert STYLES.md into a real CSS style
+
+Status: open
+Area: app
+Raised in: 2026-05-25
+Owner: shared
+
+Context:
+- `STYLES.md` now captures early Word-to-CSS guidance and extracted JKTS brand colours.
+- The current app style dropdown still uses built-in in-memory styles.
+- The JKTS reference is not yet an active CSS file or registered style option.
+
+Question:
+- What should the first production-quality JKTS CSS style include, and where should built-in CSS style files live?
+
+Impact:
+- The style reference is useful for design discussion but cannot yet be selected or persisted as a real document style.
+
+Next step:
+- Convert the `STYLES.md` starter guidance into a `.css` file, register it in the style selector, and decide the built-in style folder convention.
+
 ## ISSUE-016: Signed and notarized macOS packaging
 
 Status: open
@@ -64,7 +85,7 @@ Impact:
 Next step:
 - Decide when to replace the concept icon with final production app icons and configure Developer ID signing, notarization, and DMG generation.
 
-## ISSUE-004: Settings UI and sidecar schema completion
+## ISSUE-004: Settings UI for sidecar-backed document settings
 
 Status: open
 Area: app
@@ -72,8 +93,8 @@ Raised in: 2026-05-23
 Owner: shared
 
 Context:
-- MarkLeaf now writes a sidecar metadata file on save.
-- The sidecar currently stores a minimal style/view/export structure.
+- MarkLeaf now writes, reads, and preserves sidecar metadata on save/open.
+- The sidecar schema reference lives in `templates/markleaf-sidecar.template.jsonc`.
 - The MVP spec calls for settings for default mode/style, page size, margins, export defaults, and related document metadata.
 
 Question:
@@ -83,9 +104,37 @@ Impact:
 - Page/export settings and document metadata remain incomplete until the settings UI and sidecar schema are finalized.
 
 Next step:
-- Define the MVP sidecar schema fields and build a compact settings panel for default view mode, selected style, page size, margins, and export defaults.
+- Build a compact settings panel for selected style, default view mode, page size, margins, document metadata, and export defaults.
 
 ## Resolved
+
+## ISSUE-017: Sidecar schema and read/write round trip
+
+Status: resolved
+Area: filesystem
+Raised in: 2026-05-25
+Resolved in: 2026-05-25
+Owner: shared
+
+Context:
+- MarkLeaf needed a sidecar schema that could be discussed and iterated before the full settings UI exists.
+- The app previously overwrote generated sidecars with only a minimal style/view/export structure.
+
+Question:
+- How should MarkLeaf establish a sidecar baseline without blocking on settings/export UI?
+
+Impact:
+- Style persistence, future page/export settings, and document metadata needed a stable round-trip format.
+
+Resolution:
+- Added `templates/markleaf-sidecar.template.jsonc` as the human-readable development reference.
+- Updated app-written sidecars to use schema version `"1.0"` and the template-aligned structure.
+- Existing sidecar fields are preserved where possible when MarkLeaf writes supported fields.
+- Opening a Markdown file now reads `[filename].md.meta.json` when present.
+- Supported fields currently applied by the renderer are `style.id` and `view.mode`; unsupported sections are preserved for later settings/export work.
+
+Next step:
+- Build ISSUE-004 settings UI on top of the sidecar-backed fields.
 
 ## ISSUE-015: Link and image insertion dialogs
 

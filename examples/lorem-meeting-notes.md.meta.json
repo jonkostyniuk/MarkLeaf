@@ -1,15 +1,43 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": "1.0",
   "style": {
-    "id": "memo"
+    "id": "memo",
+    "cssPath": ""
   },
   "view": {
     "mode": "split",
-    "wordWrap": true
+    "wordWrap": true,
+    "lastScrollPosition": 0,
+    "foldedHeadings": []
   },
   "export": {
-    "pdf": {},
-    "docx": {}
+    "pdf": {
+      "enabled": true,
+      "includePageNumbers": false,
+      "profile": "standard"
+    },
+    "docx": {
+      "enabled": true,
+      "templatePath": "",
+      "mapCssFonts": true
+    }
   },
-  "updatedAt": "2026-05-24T15:28:05.450Z"
+  "updatedAt": "2026-05-26T02:06:40.903Z",
+  "document": {
+    "title": "",
+    "author": "",
+    "subject": "",
+    "keywords": [],
+    "notes": ""
+  },
+  "page": {
+    "size": "letter",
+    "orientation": "portrait",
+    "margins": {
+      "top": "1in",
+      "right": "1in",
+      "bottom": "1in",
+      "left": "1in"
+    }
+  }
 }

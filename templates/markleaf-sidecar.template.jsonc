@@ -1,0 +1,106 @@
+// MarkLeaf sidecar metadata template.
+//
+// Sidecar files are stored beside the Markdown document as:
+//
+//   example.md
+//   example.md.meta.json
+//
+// The Markdown file remains the source of truth for document content.
+// The sidecar stores app state, document settings, and export settings that
+// should not be embedded into the Markdown itself.
+{
+  // Sidecar schema version.
+  //
+  // Use string-based semantic-style versioning so minor schema refinements can
+  // be expressed without ambiguity, for example "1.0", "1.1", or "2.0".
+  // Increment the major version only when older app versions cannot safely
+  // understand the sidecar shape.
+  "schemaVersion": "1.0",
+
+  // Document style selection.
+  //
+  // `id` refers to a built-in MarkLeaf style.
+  // `cssPath` is reserved for future custom CSS file support and should point
+  // to a document-relative or user-approved local CSS file.
+  //
+  // Resolution order:
+  // 1. If `cssPath` is present and valid, use that custom CSS file.
+  // 2. Otherwise, use `id`.
+  // 3. If `id` is missing or unknown, fall back to MarkLeaf's default style.
+  "style": {
+    "id": "memo",
+    "cssPath": ""
+  },
+
+  // Editor view preferences.
+  //
+  // `mode` is the last selected editor layout. Current expected values are:
+  // - "markdown": source-only Markdown view
+  // - "split": Markdown source plus Styled pane
+  //
+  // `wordWrap` controls source editor wrapping when supported.
+  //
+  // `lastScrollPosition` and `foldedHeadings` are placeholders for restoring
+  // reading/editing state later. They should not affect document content or export.
+  "view": {
+    "mode": "split",
+    "wordWrap": true,
+    "lastScrollPosition": 0,
+    "foldedHeadings": []
+  },
+
+  // Document metadata for future settings panels and export output.
+  //
+  // These values should be optional; deleting the sidecar must not make the
+  // Markdown document unreadable.
+  "document": {
+    "title": "",
+    "author": "",
+    "subject": "",
+    "keywords": [],
+    "notes": ""
+  },
+
+  // Page settings used by print/PDF/DOCX export.
+  //
+  // Keep visual document styling in CSS: fonts, heading colours, paragraph
+  // spacing, table styling, list indentation, and similar presentation choices.
+  //
+  // Keep app/export page intent here: paper size, orientation, and margins.
+  // These values should inform print/PDF/DOCX generation and can be reflected
+  // into generated print CSS when needed.
+  //
+  // Placeholders remain intentionally simple until export settings are built.
+  "page": {
+    "size": "letter",
+    "orientation": "portrait",
+    "margins": {
+      "top": "1in",
+      "right": "1in",
+      "bottom": "1in",
+      "left": "1in"
+    }
+  },
+
+  // Export-specific preferences.
+  //
+  // These fields are placeholders until the PDF/DOCX export pipeline is built.
+  "export": {
+    "pdf": {
+      "enabled": true,
+      "includePageNumbers": false,
+      "profile": "standard"
+    },
+    "docx": {
+      "enabled": true,
+      "templatePath": "",
+      "mapCssFonts": true
+    }
+  },
+
+  // System timestamp written by the app whenever it updates the sidecar.
+  //
+  // Use an ISO 8601 UTC timestamp, for example "2026-05-25T14:30:00.000Z".
+  // Leave blank in this template.
+  "updatedAt": ""
+}
