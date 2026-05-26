@@ -1,0 +1,234 @@
+/*
+  MarkLeaf built-in style draft: markleaf-basic
+  Label: MarkLeaf Basic
+
+  First-run document style candidate based on the Word-to-CSS guidance in
+  STYLES.md and the MarkLeaf product colour palette in markleaf-spec.md.
+
+  This file is for focused iteration and is not wired into the app style
+  selector yet.
+*/
+
+.document.markleaf-basic,
+.document.doc-style-markleaf-basic {
+  --ml-primary-green: #2F6F5E;
+  --ml-deep-ink: #1F2933;
+  --ml-soft-mint: #DDEFE8;
+  --ml-paper-white: #FAFAF7;
+  --ml-muted-slate: #6B7280;
+  --ml-optional-accent: #D99A3D;
+  --ml-line: #C7D8D1;
+  --ml-code-bg: #EEF6F2;
+
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  color: var(--ml-deep-ink);
+  background: var(--ml-paper-white);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.document.markleaf-basic > *,
+.document.doc-style-markleaf-basic > * {
+  max-width: 100%;
+}
+
+.document.markleaf-basic h1,
+.document.doc-style-markleaf-basic h1 {
+  margin: 2rem 0 0.55rem;
+  color: var(--ml-primary-green);
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.18;
+}
+
+.document.markleaf-basic h2,
+.document.doc-style-markleaf-basic h2 {
+  margin: 1.55rem 0 0.45rem;
+  color: var(--ml-deep-ink);
+  font-size: 1.42rem;
+  font-weight: 700;
+  line-height: 1.25;
+  border-bottom: 2px solid var(--ml-soft-mint);
+  padding-bottom: 0.18rem;
+}
+
+.document.markleaf-basic h3,
+.document.doc-style-markleaf-basic h3 {
+  margin: 1.25rem 0 0.35rem;
+  color: var(--ml-primary-green);
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.document.markleaf-basic h4,
+.document.markleaf-basic h5,
+.document.markleaf-basic h6,
+.document.doc-style-markleaf-basic h4,
+.document.doc-style-markleaf-basic h5,
+.document.doc-style-markleaf-basic h6 {
+  margin: 1rem 0 0.3rem;
+  color: var(--ml-deep-ink);
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.32;
+}
+
+.document.markleaf-basic p,
+.document.doc-style-markleaf-basic p {
+  margin: 0 0 0.75rem;
+}
+
+.document.markleaf-basic h1 + p,
+.document.markleaf-basic h2 + p,
+.document.markleaf-basic h3 + p,
+.document.doc-style-markleaf-basic h1 + p,
+.document.doc-style-markleaf-basic h2 + p,
+.document.doc-style-markleaf-basic h3 + p {
+  margin-top: 0;
+}
+
+.document.markleaf-basic a,
+.document.doc-style-markleaf-basic a {
+  color: var(--ml-primary-green);
+  text-decoration-color: rgba(47, 111, 94, 0.35);
+  text-underline-offset: 2px;
+}
+
+.document.markleaf-basic strong,
+.document.doc-style-markleaf-basic strong {
+  color: var(--ml-deep-ink);
+  font-weight: 700;
+}
+
+.document.markleaf-basic ul,
+.document.markleaf-basic ol,
+.document.doc-style-markleaf-basic ul,
+.document.doc-style-markleaf-basic ol {
+  margin: 0 0 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.document.markleaf-basic li,
+.document.doc-style-markleaf-basic li {
+  margin-bottom: 0.35rem;
+}
+
+.document.markleaf-basic li > ul,
+.document.markleaf-basic li > ol,
+.document.doc-style-markleaf-basic li > ul,
+.document.doc-style-markleaf-basic li > ol {
+  margin-top: 0.25rem;
+}
+
+.document.markleaf-basic li p,
+.document.doc-style-markleaf-basic li p {
+  margin-bottom: 0;
+}
+
+.document.markleaf-basic blockquote,
+.document.doc-style-markleaf-basic blockquote {
+  margin: 1rem 0;
+  border-left: 4px solid var(--ml-primary-green);
+  background: var(--ml-soft-mint);
+  padding: 0.75rem 1rem;
+  color: var(--ml-deep-ink);
+}
+
+.document.markleaf-basic table,
+.document.doc-style-markleaf-basic table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  background: #FFFFFF;
+}
+
+.document.markleaf-basic th,
+.document.markleaf-basic td,
+.document.doc-style-markleaf-basic th,
+.document.doc-style-markleaf-basic td {
+  border: 1px solid var(--ml-line);
+  padding: 0.45rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.document.markleaf-basic thead th,
+.document.doc-style-markleaf-basic thead th {
+  background: var(--ml-primary-green);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.document.markleaf-basic tbody tr:nth-child(even),
+.document.doc-style-markleaf-basic tbody tr:nth-child(even) {
+  background: rgba(221, 239, 232, 0.45);
+}
+
+.document.markleaf-basic code,
+.document.doc-style-markleaf-basic code {
+  border-radius: 4px;
+  background: var(--ml-code-bg);
+  color: var(--ml-deep-ink);
+  padding: 0.12rem 0.3rem;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+}
+
+.document.markleaf-basic pre,
+.document.doc-style-markleaf-basic pre {
+  overflow: auto;
+  margin: 1rem 0;
+  border: 1px solid var(--ml-line);
+  border-radius: 6px;
+  background: var(--ml-deep-ink);
+  color: var(--ml-paper-white);
+  padding: 0.9rem 1rem;
+}
+
+.document.markleaf-basic pre code,
+.document.doc-style-markleaf-basic pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.document.markleaf-basic hr,
+.document.doc-style-markleaf-basic hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 2px solid var(--ml-soft-mint);
+}
+
+.document.markleaf-basic img,
+.document.doc-style-markleaf-basic img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media print {
+  .document.markleaf-basic,
+  .document.doc-style-markleaf-basic {
+    max-width: none;
+    padding: 0;
+    background: #FFFFFF;
+  }
+
+  .document.markleaf-basic h2,
+  .document.markleaf-basic h3,
+  .document.doc-style-markleaf-basic h2,
+  .document.doc-style-markleaf-basic h3 {
+    break-after: avoid;
+  }
+
+  .document.markleaf-basic p,
+  .document.markleaf-basic li,
+  .document.doc-style-markleaf-basic p,
+  .document.doc-style-markleaf-basic li {
+    orphans: 3;
+    widows: 3;
+  }
+}

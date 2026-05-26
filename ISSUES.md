@@ -53,7 +53,9 @@ Owner: shared
 Context:
 - `STYLES.md` now captures early Word-to-CSS guidance and extracted JKTS brand colours.
 - The current app style dropdown still uses built-in in-memory styles.
-- The JKTS reference is not yet an active CSS file or registered style option.
+- The current built-in style overrides have been exported to `styles/builtin/` for review and iteration.
+- `styles/builtin/markleaf-basic.css` is the first focused style draft using the MarkLeaf colour palette.
+- The style draft is not yet registered as an active app style option.
 
 Question:
 - What should the first production-quality JKTS CSS style include, and where should built-in CSS style files live?
@@ -62,7 +64,7 @@ Impact:
 - The style reference is useful for design discussion but cannot yet be selected or persisted as a real document style.
 
 Next step:
-- Convert the `STYLES.md` starter guidance into a `.css` file, register it in the style selector, and decide the built-in style folder convention.
+- Refine `styles/builtin/markleaf-basic.css`, register it in the style selector, and move runtime built-in style loading to the file-backed `styles/builtin/` convention.
 
 ## ISSUE-016: Signed and notarized macOS packaging
 

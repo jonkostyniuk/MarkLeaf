@@ -1,0 +1,16 @@
+/*
+  MarkLeaf built-in style: compact
+  Label: Compact draft
+
+  This file exports the current in-app `doc-style-compact` behavior for
+  iteration. Runtime integration still lives in src/styles.css for now.
+*/
+
+.document.doc-style-compact {
+  font-size: 14px;
+}
+
+.document.doc-style-compact p,
+.document.doc-style-compact li {
+  line-height: 1.45;
+}

@@ -1,0 +1,11 @@
+/*
+  MarkLeaf built-in style: memo
+  Label: Technical memo
+
+  This file exports the current in-app `doc-style-memo` behavior for
+  iteration. Runtime integration still lives in src/styles.css for now.
+*/
+
+.document.doc-style-memo {
+  box-shadow: none;
+}

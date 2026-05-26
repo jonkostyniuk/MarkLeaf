@@ -1,0 +1,15 @@
+/*
+  MarkLeaf built-in style: report
+  Label: Report
+
+  This file exports the current in-app `doc-style-report` behavior for
+  iteration. Runtime integration still lives in src/styles.css for now.
+*/
+
+.document.doc-style-report {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.document.doc-style-report h1 {
+  font-size: 34px;
+}

@@ -4,6 +4,8 @@ This document captures early CSS styling guidance for MarkLeaf document themes, 
 
 It is a reference document, not yet the final MarkLeaf theme system. The values below can be used to develop a standard CSS style that makes Markdown output feel closer to a polished Word document.
 
+The current app style overrides are exported under `styles/builtin/` for iteration. Those files are not yet the runtime source of truth; the app still applies built-in style classes from `src/styles.css` until the style registry is made file-backed.
+
 ## JKTS Brand Colours
 
 The following colours were extracted from the source Word document's heading styles:
@@ -302,3 +304,4 @@ thead th {
   }
 }
 ```
+Ok

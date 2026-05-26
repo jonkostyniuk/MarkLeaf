@@ -748,12 +748,21 @@ CSS should remain a universal, portable styling layer.
 
 ### 12.3.1 Style Reference
 
-`STYLES.md` is the current development reference for a first JKTS-inspired document style. It captures Word-to-CSS layout guidance and extracted JKTS heading colours:
+`STYLES.md` is the current development reference for a first document style. It captures Word-to-CSS layout guidance and extracted JKTS heading colours:
 
 - JKTS blue: `#2E5E94`
 - JKTS green: `#29A94F`
 
-This reference should inform future built-in CSS styles, but it is not itself an active app style until converted into a real CSS file and registered in the style selector.
+The first focused style draft is `styles/builtin/markleaf-basic.css`. It applies the Word-derived structure from `STYLES.md` using the MarkLeaf colour palette from this spec rather than the JKTS palette. It is not itself an active app style until registered in the style selector.
+
+The current built-in style overrides are exported under `styles/builtin/` for review and iteration:
+
+- `styles/builtin/memo.css` maps to style id `memo`.
+- `styles/builtin/report.css` maps to style id `report`.
+- `styles/builtin/compact.css` maps to style id `compact`.
+- `styles/builtin/markleaf-basic.css` is the working draft for a future `markleaf-basic` built-in style id.
+
+These files should become the source for built-in style IDs once the style registry is moved out of the renderer's in-memory definition. Until then, runtime styling remains in `src/styles.css`.
 
 ### 12.4 Style Scope
 
