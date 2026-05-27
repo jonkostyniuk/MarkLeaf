@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "style": {
-    "id": "memo",
+    "id": "markleaf-light",
     "cssPath": ""
   },
   "view": {
@@ -22,7 +22,7 @@
       "mapCssFonts": true
     }
   },
-  "updatedAt": "2026-05-26T02:06:40.903Z",
+  "updatedAt": "2026-05-27T00:57:55.479Z",
   "document": {
     "title": "",
     "author": "",

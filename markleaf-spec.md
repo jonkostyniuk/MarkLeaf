@@ -420,7 +420,7 @@ Example sidecar structure:
 {
   "schemaVersion": "1.0",
   "style": {
-    "id": "memo",
+    "id": "markleaf-light",
     "cssPath": ""
   },
   "view": {
@@ -753,16 +753,17 @@ CSS should remain a universal, portable styling layer.
 - JKTS blue: `#2E5E94`
 - JKTS green: `#29A94F`
 
-The first focused style draft is `styles/builtin/markleaf-basic.css`. It applies the Word-derived structure from `STYLES.md` using the MarkLeaf colour palette from this spec rather than the JKTS palette. It is not itself an active app style until registered in the style selector.
+The first focused style draft is `styles/builtin/markleaf-light.css`. It applies the Word-derived structure from `STYLES.md` using the MarkLeaf colour palette from this spec rather than the JKTS palette. It is registered as the current default built-in style under style id `markleaf-light`. A complementary dark companion style is available as `styles/builtin/markleaf-dark.css` under style id `markleaf-dark`.
 
-The current built-in style overrides are exported under `styles/builtin/` for review and iteration:
+Built-in document styles are file-backed under `styles/builtin/`. Built-in style IDs should match CSS filenames without the `.css` extension:
 
+- `styles/builtin/markleaf-light.css` maps to style id `markleaf-light`.
+- `styles/builtin/markleaf-dark.css` maps to style id `markleaf-dark`.
 - `styles/builtin/memo.css` maps to style id `memo`.
 - `styles/builtin/report.css` maps to style id `report`.
 - `styles/builtin/compact.css` maps to style id `compact`.
-- `styles/builtin/markleaf-basic.css` is the working draft for a future `markleaf-basic` built-in style id.
 
-These files should become the source for built-in style IDs once the style registry is moved out of the renderer's in-memory definition. Until then, runtime styling remains in `src/styles.css`.
+The app should package `styles/builtin/` into standalone builds so the same style files are used during development and local packaged testing. The next style milestone is to confirm `markleaf-light` first, then establish an initial baseline set of three built-in styles.
 
 ### 12.4 Style Scope
 

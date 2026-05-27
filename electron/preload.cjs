@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld("markleaf", {
   saveDocumentAs: (payload) => ipcRenderer.invoke("document:saveAs", payload),
   refreshDocument: (filePath) => ipcRenderer.invoke("document:refresh", filePath),
   openExternalLink: (url) => ipcRenderer.invoke("link:openExternal", url),
+  readBuiltinStyle: (styleId) => ipcRenderer.invoke("style:readBuiltin", styleId),
   chooseImage: () => ipcRenderer.invoke("image:choose"),
   prepareImage: (payload) => ipcRenderer.invoke("image:prepare", payload),
   getDroppedFilePath: (file) => webUtils.getPathForFile(file),

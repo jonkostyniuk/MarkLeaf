@@ -38,17 +38,30 @@ const desktopApi = window.markleaf;
 const isElectron = desktopApi?.platform === "electron";
 
 const styles = {
+  "markleaf-light": {
+    label: "MarkLeaf Light",
+    className: "doc-style-markleaf-light",
+    fileName: "markleaf-light.css"
+  },
+  "markleaf-dark": {
+    label: "MarkLeaf Dark",
+    className: "doc-style-markleaf-dark",
+    fileName: "markleaf-dark.css"
+  },
   memo: {
     label: "Technical memo",
-    className: "doc-style-memo"
+    className: "doc-style-memo",
+    fileName: "memo.css"
   },
   report: {
     label: "Report",
-    className: "doc-style-report"
+    className: "doc-style-report",
+    fileName: "report.css"
   },
   compact: {
     label: "Compact draft",
-    className: "doc-style-compact"
+    className: "doc-style-compact",
+    fileName: "compact.css"
   }
 };
 
@@ -62,7 +75,8 @@ const state = {
   saveError: "",
   diskChanged: false,
   mode: "split",
-  selectedStyle: "memo",
+  selectedStyle: "markleaf-light",
+  selectedStyleCss: "",
   splitRatio: 0.5,
   resizingSplit: false,
   linkSelection: null,
@@ -192,7 +206,9 @@ app.innerHTML = `
           <header class="pane-header">
             <span>Styled</span>
           </header>
-          <article id="preview" class="preview document" aria-label="Styled document"></article>
+          <div class="preview" aria-label="Styled document viewport">
+            <article id="preview" class="styled-page document" aria-label="Styled document"></article>
+          </div>
         </section>
       </section>
     </section>
@@ -298,16 +314,20 @@ const imageThumbButton = document.querySelector("#imageThumbButton");
 const imageThumbPreview = document.querySelector("#imageThumbPreview");
 const imageThumbLabel = document.querySelector("#imageThumbLabel");
 const imagePathStatus = document.querySelector("#imagePathStatus");
+const builtInStyleElement = document.createElement("style");
+builtInStyleElement.id = "builtinDocumentStyle";
+document.head.appendChild(builtInStyleElement);
 
 initialize();
 
-function initialize() {
+async function initialize() {
   document.body.classList.toggle("platform-darwin", desktopApi?.os === "darwin");
   populateStyleSelect();
   initializeEditor();
   bindEvents();
   bindPaneResize();
   bindDesktopEvents();
+  await loadSelectedStyleCss();
   render();
 }
 
@@ -402,10 +422,11 @@ function bindEvents() {
     applyBlockFormat(blockSelect.value);
   });
 
-  styleSelect.addEventListener("change", () => {
+  styleSelect.addEventListener("change", async () => {
     state.selectedStyle = styleSelect.value;
     state.dirty = true;
     scheduleAutoSave();
+    await loadSelectedStyleCss();
     render();
   });
 
@@ -480,6 +501,29 @@ function populateStyleSelect() {
   styleSelect.value = state.selectedStyle;
 }
 
+async function loadSelectedStyleCss() {
+  if (!desktopApi?.readBuiltinStyle) return;
+  const styleId = state.selectedStyle;
+  const result = await desktopApi.readBuiltinStyle(styleId);
+  if (styleId !== state.selectedStyle) return;
+
+  if (result?.ok) {
+    state.selectedStyleCss = result.css || "";
+    builtInStyleElement.textContent = state.selectedStyleCss;
+    return;
+  }
+
+  if (styleId !== "markleaf-light") {
+    state.selectedStyle = "markleaf-light";
+    styleSelect.value = state.selectedStyle;
+    await loadSelectedStyleCss();
+    return;
+  }
+
+  state.selectedStyleCss = "";
+  builtInStyleElement.textContent = "";
+}
+
 function render() {
   if (getEditorText() !== state.markdown) {
     setEditorText(state.markdown);
@@ -487,7 +531,9 @@ function render() {
   const documentStatus = getDocumentStatus();
   preview.innerHTML = renderMarkdown(state.markdown);
   resolvePreviewImageSources();
-  preview.className = `preview document ${styles[state.selectedStyle].className}`;
+  const selectedStyle = styles[state.selectedStyle] ? state.selectedStyle : "markleaf-light";
+  preview.className = `styled-page document doc-style ${styles[selectedStyle].className}`;
+  styleSelect.value = selectedStyle;
   editorRegion.dataset.mode = state.mode;
   updateSplitLayout();
 
@@ -808,6 +854,7 @@ function createNewDocument() {
   state.fileName = "Untitled.md";
   state.lastModified = null;
   state.markdown = EMPTY_DOCUMENT;
+  state.selectedStyle = "markleaf-light";
   state.dirty = false;
   state.saving = false;
   state.saveError = "";
@@ -889,6 +936,7 @@ function applyOpenedDocument(result) {
   state.lastModified = result.lastModified || null;
   state.selectedStyle = getSupportedStyleId(metadata.style?.id);
   state.mode = getSupportedMode(metadata.view?.mode);
+  void loadSelectedStyleCss();
   state.dirty = false;
   state.saving = false;
   state.saveError = "";
@@ -899,7 +947,7 @@ function applyOpenedDocument(result) {
 }
 
 function getSupportedStyleId(styleId) {
-  return styles[styleId] ? styleId : "memo";
+  return styles[styleId] ? styleId : "markleaf-light";
 }
 
 function getSupportedMode(mode) {

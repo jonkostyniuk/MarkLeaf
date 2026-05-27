@@ -52,19 +52,21 @@ Owner: shared
 
 Context:
 - `STYLES.md` now captures early Word-to-CSS guidance and extracted JKTS brand colours.
-- The current app style dropdown still uses built-in in-memory styles.
-- The current built-in style overrides have been exported to `styles/builtin/` for review and iteration.
-- `styles/builtin/markleaf-basic.css` is the first focused style draft using the MarkLeaf colour palette.
-- The style draft is not yet registered as an active app style option.
+- The app now loads built-in style CSS files from `styles/builtin/`.
+- Built-in style IDs should match CSS filenames without the `.css` extension.
+- The exported `memo`, `report`, and `compact` styles remain available as review baselines.
+- `styles/builtin/markleaf-light.css` is the first focused style draft using the MarkLeaf colour palette.
+- `styles/builtin/markleaf-dark.css` is a complementary dark companion style using the same reusable CSS structure.
+- `markleaf-light` is registered as the current default active app style.
 
 Question:
-- What should the first production-quality JKTS CSS style include, and where should built-in CSS style files live?
+- What should the first production-quality MarkLeaf Light style include before it becomes the baseline for additional built-in styles?
 
 Impact:
-- The style reference is useful for design discussion but cannot yet be selected or persisted as a real document style.
+- The style reference is now selectable and persistent, but the CSS still needs user review before the initial built-in style set is finalized.
 
 Next step:
-- Refine `styles/builtin/markleaf-basic.css`, register it in the style selector, and move runtime built-in style loading to the file-backed `styles/builtin/` convention.
+- Refine `styles/builtin/markleaf-light.css` first, then create an initial baseline of three built-in styles using the same file-backed ID convention.
 
 ## ISSUE-016: Signed and notarized macOS packaging
 

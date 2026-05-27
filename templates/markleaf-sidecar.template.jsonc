@@ -28,7 +28,7 @@
   // 2. Otherwise, use `id`.
   // 3. If `id` is missing or unknown, fall back to MarkLeaf's default style.
   "style": {
-    "id": "memo",
+    "id": "markleaf-light",
     "cssPath": ""
   },
 

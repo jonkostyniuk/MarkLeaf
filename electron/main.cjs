@@ -189,6 +189,10 @@ ipcMain.handle("link:openExternal", async (_event, url) => {
   return openAllowedExternalUrl(url);
 });
 
+ipcMain.handle("style:readBuiltin", async (_event, styleId) => {
+  return readBuiltinStyle(styleId);
+});
+
 ipcMain.handle("image:choose", async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     title: "Choose Image",
@@ -258,6 +262,23 @@ function openAllowedExternalUrl(url) {
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error.message || "Unable to open external link." };
+  }
+}
+
+function readBuiltinStyle(styleId) {
+  if (!/^[a-z0-9-]+$/.test(styleId || "")) {
+    return { ok: false, error: "Invalid built-in style id." };
+  }
+
+  const stylePath = path.join(__dirname, "..", "styles", "builtin", `${styleId}.css`);
+  try {
+    return {
+      ok: true,
+      id: styleId,
+      css: fs.readFileSync(stylePath, "utf8")
+    };
+  } catch (error) {
+    return { ok: false, error: error.message || "Unable to read built-in style." };
   }
 }
 
@@ -365,7 +386,7 @@ function mergeMetadata(existing = {}, metadata = {}) {
     schemaVersion: "1.0",
     style: {
       ...(existing.style || {}),
-      id: metadata?.styleId || existing.style?.id || "memo",
+      id: metadata?.styleId || existing.style?.id || "markleaf-light",
       cssPath: existing.style?.cssPath || ""
     },
     view: {

@@ -1,0 +1,288 @@
+/*
+  MarkLeaf built-in style draft: markleaf-dark
+  Label: MarkLeaf Dark
+
+  Dark companion document style based on the same Markdown object structure as
+  MarkLeaf Light. This keeps the page, heading, table, list, quote, and code
+  controls easy to compare or customize between light and dark styles.
+*/
+
+.document.doc-style {
+  /* Core document palette. Change these first when adapting the style. */
+  --doc-color-primary: #7DD3C7;
+  --doc-color-text: #F8FAFC;
+  --doc-color-muted: #CBD5E1;
+  --doc-color-background: #111827;
+  --doc-color-surface: #17212F;
+  --doc-color-border: #334155;
+  --doc-color-accent: #D99A3D;
+  --doc-color-primary-soft: #173B34;
+  --doc-color-primary-translucent: rgba(125, 211, 199, 0.45);
+  --doc-color-primary-soft-translucent: rgba(125, 211, 199, 0.12);
+  --doc-color-on-primary: #0B1412;
+  --doc-code-background: #1E293B;
+  --doc-code-block-background: #0B1120;
+  --doc-code-block-text: #E5E7EB;
+
+  /* H1 controls the top-level document title or main section title. */
+  --doc-h1-margin: 2rem 0 0.55rem;
+  --doc-h1-color: var(--doc-color-primary);
+  --doc-h1-font-size: 1.85rem;
+  --doc-h1-font-weight: 700;
+  --doc-h1-line-height: 1.18;
+
+  /* H2 controls major sections and the section divider line. */
+  --doc-h2-margin: 1.55rem 0 0.45rem;
+  --doc-h2-color: var(--doc-color-text);
+  --doc-h2-font-size: 1.42rem;
+  --doc-h2-font-weight: 700;
+  --doc-h2-line-height: 1.25;
+  --doc-h2-border-bottom: 2px solid var(--doc-color-primary-soft);
+  --doc-h2-padding-bottom: 0.18rem;
+
+  /* H3 controls subsection headings. */
+  --doc-h3-margin: 1.25rem 0 0.35rem;
+  --doc-h3-color: var(--doc-color-primary);
+  --doc-h3-font-size: 1.15rem;
+  --doc-h3-font-weight: 650;
+  --doc-h3-line-height: 1.3;
+
+  /* H4-H6 are intentionally independent for custom document hierarchies. */
+  --doc-h4-margin: 1rem 0 0.3rem;
+  --doc-h4-color: var(--doc-color-text);
+  --doc-h4-font-size: 1rem;
+  --doc-h4-font-weight: 650;
+  --doc-h4-line-height: 1.32;
+
+  --doc-h5-margin: 1rem 0 0.3rem;
+  --doc-h5-color: var(--doc-color-text);
+  --doc-h5-font-size: 1rem;
+  --doc-h5-font-weight: 650;
+  --doc-h5-line-height: 1.32;
+
+  --doc-h6-margin: 1rem 0 0.3rem;
+  --doc-h6-color: var(--doc-color-text);
+  --doc-h6-font-size: 1rem;
+  --doc-h6-font-weight: 650;
+  --doc-h6-line-height: 1.32;
+
+  /* Page sizing controls the document measure inside the Styled pane. */
+  --doc-page-max-width: 800px;
+  --doc-page-margin: 0 auto;
+  --doc-page-padding: 0 2rem;
+
+  /* Page body: width, margins, base font, and default reading rhythm. */
+  max-width: var(--doc-page-max-width);
+  margin: var(--doc-page-margin);
+  padding: var(--doc-page-padding);
+  color: var(--doc-color-text);
+  background: var(--doc-color-background);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Keep rendered Markdown content inside the document measure. */
+.document.doc-style > * {
+  max-width: 100%;
+}
+
+/* Markdown heading levels. */
+.document.doc-style h1 {
+  margin: var(--doc-h1-margin);
+  color: var(--doc-h1-color);
+  font-size: var(--doc-h1-font-size);
+  font-weight: var(--doc-h1-font-weight);
+  line-height: var(--doc-h1-line-height);
+}
+
+.document.doc-style h2 {
+  margin: var(--doc-h2-margin);
+  color: var(--doc-h2-color);
+  font-size: var(--doc-h2-font-size);
+  font-weight: var(--doc-h2-font-weight);
+  line-height: var(--doc-h2-line-height);
+  border-bottom: var(--doc-h2-border-bottom);
+  padding-bottom: var(--doc-h2-padding-bottom);
+}
+
+.document.doc-style h3 {
+  margin: var(--doc-h3-margin);
+  color: var(--doc-h3-color);
+  font-size: var(--doc-h3-font-size);
+  font-weight: var(--doc-h3-font-weight);
+  line-height: var(--doc-h3-line-height);
+}
+
+.document.doc-style h4 {
+  margin: var(--doc-h4-margin);
+  color: var(--doc-h4-color);
+  font-size: var(--doc-h4-font-size);
+  font-weight: var(--doc-h4-font-weight);
+  line-height: var(--doc-h4-line-height);
+}
+
+.document.doc-style h5 {
+  margin: var(--doc-h5-margin);
+  color: var(--doc-h5-color);
+  font-size: var(--doc-h5-font-size);
+  font-weight: var(--doc-h5-font-weight);
+  line-height: var(--doc-h5-line-height);
+}
+
+.document.doc-style h6 {
+  margin: var(--doc-h6-margin);
+  color: var(--doc-h6-color);
+  font-size: var(--doc-h6-font-size);
+  font-weight: var(--doc-h6-font-weight);
+  line-height: var(--doc-h6-line-height);
+}
+
+/* Paragraph spacing. */
+.document.doc-style p {
+  margin: 0 0 0.75rem;
+}
+
+/* Tighten the first paragraph after major headings. */
+.document.doc-style h1 + p,
+.document.doc-style h2 + p,
+.document.doc-style h3 + p {
+  margin-top: 0;
+}
+
+/* Inline links. */
+.document.doc-style a {
+  color: var(--doc-color-primary);
+  text-decoration-color: var(--doc-color-primary-translucent);
+  text-underline-offset: 2px;
+}
+
+/* Strong emphasis. */
+.document.doc-style strong {
+  color: var(--doc-color-text);
+  font-weight: 700;
+}
+
+/* Ordered and unordered lists. */
+.document.doc-style ul,
+.document.doc-style ol {
+  margin: 0 0 0.75rem;
+  padding-left: 1.5rem;
+}
+
+/* Individual list item spacing. */
+.document.doc-style li {
+  margin-bottom: 0.35rem;
+}
+
+/* Nested list spacing. */
+.document.doc-style li > ul,
+.document.doc-style li > ol {
+  margin-top: 0.25rem;
+}
+
+/* Paragraphs inside list items should not add extra bottom gaps. */
+.document.doc-style li p {
+  margin-bottom: 0;
+}
+
+/* Blockquotes: useful for callouts, excerpts, or highlighted notes. */
+.document.doc-style blockquote {
+  margin: 1rem 0;
+  border-left: 4px solid var(--doc-color-primary);
+  background: var(--doc-color-primary-soft);
+  padding: 0.75rem 1rem;
+  color: var(--doc-color-text);
+}
+
+/* Tables generated from Markdown pipe tables. */
+.document.doc-style table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  background: var(--doc-color-surface);
+}
+
+/* Table cell borders and spacing. */
+.document.doc-style th,
+.document.doc-style td {
+  border: 1px solid var(--doc-color-border);
+  padding: 0.45rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+/* Table header row. */
+.document.doc-style thead th {
+  background: var(--doc-color-primary);
+  color: var(--doc-color-on-primary);
+  font-weight: 700;
+}
+
+/* Alternating table rows for scanability. */
+.document.doc-style tbody tr:nth-child(even) {
+  background: var(--doc-color-primary-soft-translucent);
+}
+
+/* Inline code spans. */
+.document.doc-style code {
+  border-radius: 4px;
+  background: var(--doc-code-background);
+  color: var(--doc-color-text);
+  padding: 0.12rem 0.3rem;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+}
+
+/* Fenced code blocks. */
+.document.doc-style pre {
+  overflow: auto;
+  margin: 1rem 0;
+  border: 1px solid var(--doc-color-border);
+  border-radius: 6px;
+  background: var(--doc-code-block-background);
+  color: var(--doc-code-block-text);
+  padding: 0.9rem 1rem;
+}
+
+/* Avoid double styling code text inside fenced code blocks. */
+.document.doc-style pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* Horizontal rules from Markdown `---`. */
+.document.doc-style hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 2px solid var(--doc-color-primary-soft);
+}
+
+/* Images inserted or referenced from Markdown. */
+.document.doc-style img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Print/export defaults. Keep this conservative until export profiles mature. */
+@media print {
+  .document.doc-style {
+    max-width: none;
+    padding: 0;
+    background: var(--doc-color-surface);
+  }
+
+  /* Keep section headings with their following content when possible. */
+  .document.doc-style h2,
+  .document.doc-style h3 {
+    break-after: avoid;
+  }
+
+  /* Reduce isolated first/last lines across printed pages. */
+  .document.doc-style p,
+  .document.doc-style li {
+    orphans: 3;
+    widows: 3;
+  }
+}

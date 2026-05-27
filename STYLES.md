@@ -4,7 +4,7 @@ This document captures early CSS styling guidance for MarkLeaf document themes, 
 
 It is a reference document, not yet the final MarkLeaf theme system. The values below can be used to develop a standard CSS style that makes Markdown output feel closer to a polished Word document.
 
-The current app style overrides are exported under `styles/builtin/` for iteration. Those files are not yet the runtime source of truth; the app still applies built-in style classes from `src/styles.css` until the style registry is made file-backed.
+The app loads built-in document styles from `styles/builtin/`. Built-in style IDs match CSS filenames without the `.css` extension, for example `styles/builtin/markleaf-light.css` maps to style id `markleaf-light` and `styles/builtin/markleaf-dark.css` maps to style id `markleaf-dark`.
 
 ## JKTS Brand Colours
 

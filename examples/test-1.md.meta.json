@@ -1,15 +1,43 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": "1.0",
   "style": {
-    "id": "memo"
+    "id": "markleaf-light",
+    "cssPath": ""
   },
   "view": {
     "mode": "split",
-    "wordWrap": true
+    "wordWrap": true,
+    "lastScrollPosition": 0,
+    "foldedHeadings": []
   },
   "export": {
-    "pdf": {},
-    "docx": {}
+    "pdf": {
+      "enabled": true,
+      "includePageNumbers": false,
+      "profile": "standard"
+    },
+    "docx": {
+      "enabled": true,
+      "templatePath": "",
+      "mapCssFonts": true
+    }
   },
-  "updatedAt": "2026-05-24T20:25:58.334Z"
+  "updatedAt": "2026-05-27T01:12:28.390Z",
+  "document": {
+    "title": "",
+    "author": "",
+    "subject": "",
+    "keywords": [],
+    "notes": ""
+  },
+  "page": {
+    "size": "letter",
+    "orientation": "portrait",
+    "margins": {
+      "top": "1in",
+      "right": "1in",
+      "bottom": "1in",
+      "left": "1in"
+    }
+  }
 }
