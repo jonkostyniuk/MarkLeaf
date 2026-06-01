@@ -89,11 +89,13 @@ Implemented prototype features:
 - Heading outline
 - Recent file links, capped at the five most recently opened files
 - Collapsible left sidebar sections
+- Document Settings dialog for style, view mode, page settings, document metadata, and export defaults
 - Native Electron open/save/save-as dialogs
 - Unsaved new documents remain in memory until the first manual save
 - Shared icon-and-colour document status in the title bar and sidebar
 - Sidecar metadata creation on save
 - Sidecar metadata read/write round trip with preserved unsupported fields
+- Sidecar-backed style, view, page, document metadata, and export-default settings
 - Native file watching through the Electron main process with MarkLeaf-owned save events ignored by mtime tracking
 - Manual refresh and non-banner `Disk changed` status for external AI/script edits
 - Fixed native-app chrome with non-scrolling app bar, command bar, toolbar, pane headers, and status bar

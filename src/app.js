@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Save,
   SaveAll,
+  Settings,
   Strikethrough,
   Table
 } from "lucide";
@@ -50,6 +51,49 @@ const styles = {
   }
 };
 
+const pageSizes = {
+  letter: "Letter",
+  a4: "A4",
+  legal: "Legal"
+};
+
+function getDefaultDocumentInfo() {
+  return {
+    title: "",
+    author: "",
+    subject: "",
+    keywords: [],
+    notes: ""
+  };
+}
+
+function getDefaultPageSettings() {
+  return {
+    size: "letter",
+    orientation: "portrait",
+    margins: {
+      top: "1in",
+      right: "1in",
+      bottom: "1in",
+      left: "1in"
+    }
+  };
+}
+
+function getDefaultExportSettings() {
+  return {
+    pdf: {
+      enabled: true,
+      includePageNumbers: false,
+      profile: "standard"
+    },
+    docx: {
+      enabled: true,
+      mapCssFonts: true
+    }
+  };
+}
+
 const state = {
   markdown: EMPTY_DOCUMENT,
   filePath: null,
@@ -62,6 +106,9 @@ const state = {
   mode: "split",
   selectedStyle: "markleaf-light",
   selectedStyleCss: "",
+  documentInfo: getDefaultDocumentInfo(),
+  pageSettings: getDefaultPageSettings(),
+  exportSettings: getDefaultExportSettings(),
   splitRatio: 0.5,
   resizingSplit: false,
   linkSelection: null,
@@ -112,6 +159,7 @@ app.innerHTML = `
         <button type="button" data-action="save" class="icon-button" aria-label="Save document" data-tooltip="Save document">${icon(Save)}</button>
         <button type="button" data-action="saveAs" class="icon-button" aria-label="Save document as" data-tooltip="Save document as">${icon(SaveAll)}</button>
         <button type="button" data-action="refresh" class="icon-button" aria-label="Reload from disk" data-tooltip="Reload from disk">${icon(RefreshCw)}</button>
+        <button type="button" data-action="settings" class="icon-button" aria-label="Document settings" data-tooltip="Document settings">${icon(Settings)}</button>
       </div>
     </section>
 
@@ -266,6 +314,108 @@ app.innerHTML = `
         </footer>
       </form>
     </div>
+
+    <div id="settingsDialog" class="modal-backdrop" hidden>
+      <form id="settingsForm" class="modal settings-modal" aria-labelledby="settingsDialogTitle">
+        <header class="modal-header">
+          <h2 id="settingsDialogTitle">Document Settings</h2>
+        </header>
+        <div class="modal-body settings-body">
+          <section class="settings-section">
+            <h3>Page</h3>
+            <div class="settings-grid">
+              <label class="form-field">
+                <span>Size</span>
+                <select id="settingsPageSizeSelect"></select>
+              </label>
+              <label class="form-field">
+                <span>Orientation</span>
+                <select id="settingsOrientationSelect">
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Top margin</span>
+                <input id="settingsMarginTopInput" type="text" autocomplete="off">
+              </label>
+              <label class="form-field">
+                <span>Right margin</span>
+                <input id="settingsMarginRightInput" type="text" autocomplete="off">
+              </label>
+              <label class="form-field">
+                <span>Bottom margin</span>
+                <input id="settingsMarginBottomInput" type="text" autocomplete="off">
+              </label>
+              <label class="form-field">
+                <span>Left margin</span>
+                <input id="settingsMarginLeftInput" type="text" autocomplete="off">
+              </label>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <h3>Metadata</h3>
+            <div class="settings-grid">
+              <label class="form-field">
+                <span>Title</span>
+                <input id="settingsTitleInput" type="text" autocomplete="off">
+              </label>
+              <label class="form-field">
+                <span>Author</span>
+                <input id="settingsAuthorInput" type="text" autocomplete="off">
+              </label>
+              <label class="form-field">
+                <span>Subject</span>
+                <input id="settingsSubjectInput" type="text" autocomplete="off">
+              </label>
+              <label class="form-field">
+                <span>Keywords</span>
+                <input id="settingsKeywordsInput" type="text" autocomplete="off" placeholder="comma, separated, terms">
+              </label>
+            </div>
+            <label class="form-field">
+              <span>Notes</span>
+              <textarea id="settingsNotesInput" rows="3"></textarea>
+            </label>
+          </section>
+
+          <section class="settings-section">
+            <h3>Export Defaults</h3>
+            <div class="settings-grid">
+              <label class="checkbox-field">
+                <input id="settingsPdfEnabledInput" type="checkbox">
+                <span>Enable PDF export</span>
+              </label>
+              <label class="checkbox-field">
+                <input id="settingsPdfPageNumbersInput" type="checkbox">
+                <span>PDF page numbers</span>
+              </label>
+              <label class="form-field">
+                <span>PDF profile</span>
+                <select id="settingsPdfProfileSelect">
+                  <option value="standard">Standard</option>
+                  <option value="draft">Draft</option>
+                  <option value="client">Client</option>
+                </select>
+              </label>
+              <label class="checkbox-field">
+                <input id="settingsDocxEnabledInput" type="checkbox">
+                <span>Enable DOCX export</span>
+              </label>
+              <label class="checkbox-field">
+                <input id="settingsDocxMapFontsInput" type="checkbox">
+                <span>Map CSS fonts</span>
+              </label>
+            </div>
+          </section>
+        </div>
+        <footer class="modal-actions">
+          <button type="button" data-settings-action="cancel">Cancel</button>
+          <button type="submit" class="primary-action">Apply</button>
+        </footer>
+      </form>
+    </div>
   </main>
 `;
 
@@ -299,6 +449,24 @@ const imageThumbButton = document.querySelector("#imageThumbButton");
 const imageThumbPreview = document.querySelector("#imageThumbPreview");
 const imageThumbLabel = document.querySelector("#imageThumbLabel");
 const imagePathStatus = document.querySelector("#imagePathStatus");
+const settingsDialog = document.querySelector("#settingsDialog");
+const settingsForm = document.querySelector("#settingsForm");
+const settingsPageSizeSelect = document.querySelector("#settingsPageSizeSelect");
+const settingsOrientationSelect = document.querySelector("#settingsOrientationSelect");
+const settingsMarginTopInput = document.querySelector("#settingsMarginTopInput");
+const settingsMarginRightInput = document.querySelector("#settingsMarginRightInput");
+const settingsMarginBottomInput = document.querySelector("#settingsMarginBottomInput");
+const settingsMarginLeftInput = document.querySelector("#settingsMarginLeftInput");
+const settingsTitleInput = document.querySelector("#settingsTitleInput");
+const settingsAuthorInput = document.querySelector("#settingsAuthorInput");
+const settingsSubjectInput = document.querySelector("#settingsSubjectInput");
+const settingsKeywordsInput = document.querySelector("#settingsKeywordsInput");
+const settingsNotesInput = document.querySelector("#settingsNotesInput");
+const settingsPdfEnabledInput = document.querySelector("#settingsPdfEnabledInput");
+const settingsPdfPageNumbersInput = document.querySelector("#settingsPdfPageNumbersInput");
+const settingsPdfProfileSelect = document.querySelector("#settingsPdfProfileSelect");
+const settingsDocxEnabledInput = document.querySelector("#settingsDocxEnabledInput");
+const settingsDocxMapFontsInput = document.querySelector("#settingsDocxMapFontsInput");
 const builtInStyleElement = document.createElement("style");
 builtInStyleElement.id = "builtinDocumentStyle";
 document.head.appendChild(builtInStyleElement);
@@ -308,6 +476,7 @@ initialize();
 async function initialize() {
   document.body.classList.toggle("platform-darwin", desktopApi?.os === "darwin");
   populateStyleSelect();
+  populateSettingsSelects();
   initializeEditor();
   bindEvents();
   bindPaneResize();
@@ -385,6 +554,11 @@ function bindEvents() {
       return;
     }
 
+    if (target.dataset.settingsAction === "cancel") {
+      closeSettingsDialog();
+      return;
+    }
+
     if (target.dataset.action) {
       handleAction(target.dataset.action);
     }
@@ -399,6 +573,8 @@ function bindEvents() {
     }
     if (target.dataset.mode) {
       state.mode = target.dataset.mode;
+      state.dirty = true;
+      scheduleAutoSave();
       render();
     }
   });
@@ -439,6 +615,17 @@ function bindEvents() {
     }
   });
 
+  settingsForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    applySettingsFromDialog();
+  });
+
+  settingsDialog.addEventListener("click", (event) => {
+    if (event.target === settingsDialog) {
+      closeSettingsDialog();
+    }
+  });
+
   imageDropZone.addEventListener("dragover", (event) => {
     event.preventDefault();
     imageDropZone.classList.add("drag-over");
@@ -461,6 +648,9 @@ function bindEvents() {
     if (event.key === "Escape" && !imageDialog.hidden) {
       closeImageDialog();
     }
+    if (event.key === "Escape" && !settingsDialog.hidden) {
+      closeSettingsDialog();
+    }
   });
 
   window.addEventListener("beforeunload", (event) => {
@@ -477,6 +667,7 @@ async function handleAction(action) {
   if (action === "save") await saveNow();
   if (action === "saveAs") await saveAs();
   if (action === "refresh") await refreshFromDisk();
+  if (action === "settings") openSettingsDialog();
 }
 
 function populateStyleSelect() {
@@ -484,6 +675,12 @@ function populateStyleSelect() {
     .map(([value, style]) => `<option value="${value}">${style.label}</option>`)
     .join("");
   styleSelect.value = state.selectedStyle;
+}
+
+function populateSettingsSelects() {
+  settingsPageSizeSelect.innerHTML = Object.entries(pageSizes)
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join("");
 }
 
 async function loadSelectedStyleCss() {
@@ -531,6 +728,7 @@ function render() {
   pathStatus.textContent = getPathStatus();
   modeStatus.textContent = `Mode: ${state.mode}`;
   watchStatus.textContent = getWatchStatus();
+  syncOpenSettingsDialog();
 
   renderOutline();
   renderRecentFiles();
@@ -632,6 +830,82 @@ function renderRecentFiles() {
       </li>
     `)
     .join("");
+}
+
+function openSettingsDialog() {
+  syncSettingsDialog();
+  settingsDialog.hidden = false;
+  window.setTimeout(() => settingsPageSizeSelect.focus());
+}
+
+function closeSettingsDialog() {
+  settingsDialog.hidden = true;
+  editorView.focus();
+}
+
+function syncOpenSettingsDialog() {
+  if (!settingsDialog.hidden) {
+    syncSettingsDialog();
+  }
+}
+
+function syncSettingsDialog() {
+  settingsPageSizeSelect.value = state.pageSettings.size;
+  settingsOrientationSelect.value = state.pageSettings.orientation;
+  settingsMarginTopInput.value = state.pageSettings.margins.top;
+  settingsMarginRightInput.value = state.pageSettings.margins.right;
+  settingsMarginBottomInput.value = state.pageSettings.margins.bottom;
+  settingsMarginLeftInput.value = state.pageSettings.margins.left;
+  settingsTitleInput.value = state.documentInfo.title;
+  settingsAuthorInput.value = state.documentInfo.author;
+  settingsSubjectInput.value = state.documentInfo.subject;
+  settingsKeywordsInput.value = state.documentInfo.keywords.join(", ");
+  settingsNotesInput.value = state.documentInfo.notes;
+  settingsPdfEnabledInput.checked = state.exportSettings.pdf.enabled;
+  settingsPdfPageNumbersInput.checked = state.exportSettings.pdf.includePageNumbers;
+  settingsPdfProfileSelect.value = state.exportSettings.pdf.profile;
+  settingsDocxEnabledInput.checked = state.exportSettings.docx.enabled;
+  settingsDocxMapFontsInput.checked = state.exportSettings.docx.mapCssFonts;
+}
+
+async function applySettingsFromDialog() {
+  state.pageSettings = normalizePageSettings({
+    size: settingsPageSizeSelect.value,
+    orientation: settingsOrientationSelect.value,
+    margins: {
+      top: settingsMarginTopInput.value.trim(),
+      right: settingsMarginRightInput.value.trim(),
+      bottom: settingsMarginBottomInput.value.trim(),
+      left: settingsMarginLeftInput.value.trim()
+    }
+  });
+  state.documentInfo = normalizeDocumentInfo({
+    title: settingsTitleInput.value.trim(),
+    author: settingsAuthorInput.value.trim(),
+    subject: settingsSubjectInput.value.trim(),
+    keywords: settingsKeywordsInput.value
+      .split(",")
+      .map((keyword) => keyword.trim())
+      .filter(Boolean),
+    notes: settingsNotesInput.value.trim()
+  });
+  state.exportSettings = normalizeExportSettings({
+    pdf: {
+      enabled: settingsPdfEnabledInput.checked,
+      includePageNumbers: settingsPdfPageNumbersInput.checked,
+      profile: settingsPdfProfileSelect.value
+    },
+    docx: {
+      enabled: settingsDocxEnabledInput.checked,
+      mapCssFonts: settingsDocxMapFontsInput.checked
+    }
+  });
+  state.dirty = true;
+  state.saveError = "";
+  scheduleAutoSave();
+  await loadSelectedStyleCss();
+  closeSettingsDialog();
+  render();
 }
 
 function updateModeButtons() {
@@ -840,12 +1114,17 @@ function createNewDocument() {
   state.lastModified = null;
   state.markdown = EMPTY_DOCUMENT;
   state.selectedStyle = "markleaf-light";
+  state.mode = "split";
+  state.documentInfo = getDefaultDocumentInfo();
+  state.pageSettings = getDefaultPageSettings();
+  state.exportSettings = getDefaultExportSettings();
   state.dirty = false;
   state.saving = false;
   state.saveError = "";
   state.diskChanged = false;
   stopWatching();
   resetEditorDocument(state.markdown);
+  void loadSelectedStyleCss();
   render();
 }
 
@@ -874,10 +1153,7 @@ async function saveWithDesktopApi(saveAsDocument, options = {}) {
       filePath: saveAsDocument ? null : state.filePath,
       fileName: state.fileName,
       markdown: state.markdown,
-      metadata: {
-        mode: state.mode,
-        styleId: state.selectedStyle
-      }
+      metadata: buildMetadataPayload()
     };
     const result = saveAsDocument
       ? await desktopApi.saveDocumentAs(payload)
@@ -921,6 +1197,9 @@ function applyOpenedDocument(result) {
   state.lastModified = result.lastModified || null;
   state.selectedStyle = getSupportedStyleId(metadata.style?.id);
   state.mode = getSupportedMode(metadata.view?.mode);
+  state.documentInfo = normalizeDocumentInfo(metadata.document);
+  state.pageSettings = normalizePageSettings(metadata.page);
+  state.exportSettings = normalizeExportSettings(metadata.export);
   void loadSelectedStyleCss();
   state.dirty = false;
   state.saving = false;
@@ -937,6 +1216,75 @@ function getSupportedStyleId(styleId) {
 
 function getSupportedMode(mode) {
   return mode === "markdown" || mode === "split" ? mode : "split";
+}
+
+function buildMetadataPayload() {
+  return {
+    style: {
+      id: state.selectedStyle,
+      cssPath: ""
+    },
+    view: {
+      mode: state.mode,
+      wordWrap: true
+    },
+    document: state.documentInfo,
+    page: state.pageSettings,
+    export: state.exportSettings
+  };
+}
+
+function normalizeDocumentInfo(documentInfo = {}) {
+  const source = documentInfo && typeof documentInfo === "object" ? documentInfo : {};
+  const defaults = getDefaultDocumentInfo();
+  return {
+    ...defaults,
+    ...source,
+    keywords: Array.isArray(source.keywords)
+      ? source.keywords.map(String).filter(Boolean)
+      : defaults.keywords
+  };
+}
+
+function normalizePageSettings(page = {}) {
+  const source = page && typeof page === "object" ? page : {};
+  const defaults = getDefaultPageSettings();
+  const size = pageSizes[source.size] ? source.size : defaults.size;
+  const orientation = source.orientation === "landscape" ? "landscape" : defaults.orientation;
+  return {
+    ...defaults,
+    ...source,
+    size,
+    orientation,
+    margins: {
+      top: normalizeMarginValue(source.margins?.top, defaults.margins.top),
+      right: normalizeMarginValue(source.margins?.right, defaults.margins.right),
+      bottom: normalizeMarginValue(source.margins?.bottom, defaults.margins.bottom),
+      left: normalizeMarginValue(source.margins?.left, defaults.margins.left)
+    }
+  };
+}
+
+function normalizeMarginValue(value, fallback) {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function normalizeExportSettings(exportSettings = {}) {
+  const source = exportSettings && typeof exportSettings === "object" ? exportSettings : {};
+  const sourceDocx = source.docx && typeof source.docx === "object" ? source.docx : {};
+  const defaults = getDefaultExportSettings();
+  return {
+    pdf: {
+      ...defaults.pdf,
+      ...(source.pdf || {}),
+      enabled: source.pdf?.enabled ?? defaults.pdf.enabled,
+      includePageNumbers: source.pdf?.includePageNumbers ?? defaults.pdf.includePageNumbers
+    },
+    docx: {
+      enabled: sourceDocx.enabled ?? defaults.docx.enabled,
+      mapCssFonts: sourceDocx.mapCssFonts ?? defaults.docx.mapCssFonts
+    }
+  };
 }
 
 function bindDesktopEvents() {

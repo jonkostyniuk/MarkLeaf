@@ -93,7 +93,9 @@ function installMenu() {
         { label: "Save", accelerator: "CmdOrCtrl+S", click: () => mainWindow?.webContents.send("menu:save") },
         { label: "Save As...", accelerator: "CmdOrCtrl+Shift+S", click: () => mainWindow?.webContents.send("menu:save-as") },
         { type: "separator" },
-        { label: "Reload from Disk", accelerator: "CmdOrCtrl+R", click: () => mainWindow?.webContents.send("menu:refresh") }
+        { label: "Reload from Disk", accelerator: "CmdOrCtrl+R", click: () => mainWindow?.webContents.send("menu:refresh") },
+        { type: "separator" },
+        { label: "Document Settings...", accelerator: "CmdOrCtrl+,", click: () => mainWindow?.webContents.send("menu:settings") }
       ]
     },
     {
@@ -386,13 +388,13 @@ function mergeMetadata(existing = {}, metadata = {}) {
     schemaVersion: "1.0",
     style: {
       ...(existing.style || {}),
-      id: metadata?.styleId || existing.style?.id || "markleaf-light",
-      cssPath: existing.style?.cssPath || ""
+      id: metadata?.style?.id || metadata?.styleId || existing.style?.id || "markleaf-light",
+      cssPath: metadata?.style?.cssPath ?? existing.style?.cssPath ?? ""
     },
     view: {
       ...(existing.view || {}),
-      mode: metadata?.mode || existing.view?.mode || "split",
-      wordWrap: metadata?.wordWrap ?? existing.view?.wordWrap ?? true,
+      mode: metadata?.view?.mode || metadata?.mode || existing.view?.mode || "split",
+      wordWrap: metadata?.view?.wordWrap ?? metadata?.wordWrap ?? existing.view?.wordWrap ?? true,
       lastScrollPosition: existing.view?.lastScrollPosition || 0,
       foldedHeadings: Array.isArray(existing.view?.foldedHeadings) ? existing.view.foldedHeadings : []
     },
@@ -402,33 +404,36 @@ function mergeMetadata(existing = {}, metadata = {}) {
       subject: "",
       keywords: [],
       notes: "",
-      ...(existing.document || {})
+      ...(existing.document || {}),
+      ...(metadata.document || {})
     },
     page: {
       size: "letter",
       orientation: "portrait",
       ...(existing.page || {}),
+      ...(metadata.page || {}),
       margins: {
         top: "1in",
         right: "1in",
         bottom: "1in",
         left: "1in",
-        ...(existing.page?.margins || {})
+        ...(existing.page?.margins || {}),
+        ...(metadata.page?.margins || {})
       }
     },
     export: {
       ...(existing.export || {}),
+      ...(metadata.export || {}),
       pdf: {
         enabled: true,
         includePageNumbers: false,
         profile: "standard",
-        ...(existing.export?.pdf || {})
+        ...(existing.export?.pdf || {}),
+        ...(metadata.export?.pdf || {})
       },
       docx: {
-        enabled: true,
-        templatePath: "",
-        mapCssFonts: true,
-        ...(existing.export?.docx || {})
+        enabled: metadata.export?.docx?.enabled ?? existing.export?.docx?.enabled ?? true,
+        mapCssFonts: metadata.export?.docx?.mapCssFonts ?? existing.export?.docx?.mapCssFonts ?? true
       }
     },
     updatedAt: new Date().toISOString()

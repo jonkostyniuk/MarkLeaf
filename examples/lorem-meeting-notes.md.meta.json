@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "style": {
-    "id": "markleaf-light",
+    "id": "markleaf-dark",
     "cssPath": ""
   },
   "view": {
@@ -18,11 +18,10 @@
     },
     "docx": {
       "enabled": true,
-      "templatePath": "",
       "mapCssFonts": true
     }
   },
-  "updatedAt": "2026-06-01T01:57:23.891Z",
+  "updatedAt": "2026-06-01T02:44:38.711Z",
   "document": {
     "title": "",
     "author": "",

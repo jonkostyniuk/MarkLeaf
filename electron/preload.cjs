@@ -26,7 +26,7 @@ contextBridge.exposeInMainWorld("markleaf", {
     return () => ipcRenderer.removeListener("document:external-change", listener);
   },
   onMenuCommand: (callback) => {
-    const channels = ["menu:new", "menu:open", "menu:save", "menu:save-as", "menu:refresh", "menu:undo", "menu:redo"];
+    const channels = ["menu:new", "menu:open", "menu:save", "menu:save-as", "menu:refresh", "menu:settings", "menu:undo", "menu:redo"];
     const listeners = channels.map((channel) => {
       const listener = () => callback(channel.replace("menu:", ""));
       ipcRenderer.on(channel, listener);

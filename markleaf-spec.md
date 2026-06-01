@@ -232,7 +232,6 @@ Candidate export approaches:
 - Markdown → HTML → CSS-styled PDF using a controlled print renderer.
 - Markdown → DOCX using Pandoc or a comparable conversion engine.
 - Markdown → intermediate AST → DOCX with explicit style mapping.
-- Optional use of a DOCX reference template for Word style mapping.
 
 The key export design principle is:
 
@@ -241,7 +240,7 @@ The key export design principle is:
 The app should distinguish between:
 
 - **CSS style file:** typography, heading appearance, paragraph spacing, table styling, blockquote styling, code styling, and general visual presentation.
-- **Sidecar JSON metadata:** page size, margins, selected CSS file, export defaults, DOCX template path, title metadata, and other app/export settings.
+- **Sidecar JSON metadata:** page size, margins, selected CSS file, export defaults, title metadata, and other app/export settings.
 
 A practical first implementation may use Pandoc for DOCX export if it provides the most authentic Word document structure. However, the spec should treat Pandoc as an implementation candidate, not a settled requirement.
 
@@ -254,7 +253,7 @@ DOCX export should consider:
 - Page size.
 - Margins.
 - Title and metadata.
-- Optional reference `.docx` template.
+- CSS-informed mapping to Word styles where practical.
 - Clean re-opening and continued editing in Microsoft Word.
 
 PDF export should consider:
@@ -454,7 +453,6 @@ Example sidecar structure:
     },
     "docx": {
       "enabled": true,
-      "templatePath": "",
       "mapCssFonts": true
     }
   },
@@ -854,7 +852,7 @@ Preferred:
 
 Not assumed for the core design:
 
-- User-provided reference `.docx` templates.
+- User-provided reference `.docx` templates. These are advanced, late-roadmap functionality only if CSS-informed mapping proves insufficient.
 
 Important implementation note:
 
@@ -1348,9 +1346,9 @@ Deliverables:
 
 Current baseline status:
 
-- Implemented: file watcher, unsaved change handling, toolbar controls, recent files, word/character count, outline panel, shared save/disk status, link dialog, image dialog, resizable split panes, and sidecar read/write round trip.
+- Implemented: file watcher, unsaved change handling, toolbar controls, recent files, word/character count, outline panel, shared save/disk status, link dialog, image dialog, resizable split panes, sidecar read/write round trip, and compact Document Settings dialog.
 - Partially implemented: conflict handling through `Disk changed` status and manual Reload from disk; a richer conflict prompt/diff is deferred.
-- Remaining: settings UI and export/page settings activation.
+- Remaining: no open Phase 2 editor blocker; export/page settings are sidecar-backed and ready for the export spike.
 
 ### 26.4 Phase 3 — Export System
 
@@ -1362,7 +1360,6 @@ Deliverables:
 - DOCX export.
 - Export style settings.
 - Print CSS support.
-- Optional DOCX template support.
 
 ### 26.5 Phase 4 — Word-Lite Styled Mode
 
@@ -1443,7 +1440,7 @@ The following decisions are assumed based on current user direction:
 26. DOCX export must be treated seriously, with the goal of producing a Word document that can be continued in Word.
 27. PDF export should represent the same styled document/export intent as DOCX, but as a fixed final format.
 28. Export quality should be validated early, including Pandoc and other viable options.
-29. User-provided reference DOCX templates are not assumed for the core product.
+29. User-provided reference DOCX templates are not part of current app or sidecar support; they are late-roadmap only if CSS-informed DOCX mapping proves insufficient.
 30. Fonts should be supported through CSS where practical, with an export mapping layer considered for DOCX.
 31. Mermaid blocks should be preserved as fenced code blocks in the MVP, with visual Mermaid rendering marked as a good future feature.
 32. Advanced diffing, AI edit comparison, and Git integration are future features, not MVP requirements.

@@ -64,15 +64,18 @@ Impact:
 Next step:
 - Decide when to replace the concept icon with final production app icons and configure Developer ID signing, notarization, and DMG generation.
 
+## Resolved
+
 ## ISSUE-004: Settings UI for sidecar-backed document settings
 
-Status: open
+Status: resolved
 Area: app
 Raised in: 2026-05-23
+Resolved in: 2026-05-31
 Owner: shared
 
 Context:
-- MarkLeaf now writes, reads, and preserves sidecar metadata on save/open.
+- MarkLeaf writes, reads, and preserves sidecar metadata on save/open.
 - The sidecar schema reference lives in `templates/markleaf-sidecar.template.jsonc`.
 - The MVP spec calls for settings for default mode/style, page size, margins, export defaults, and related document metadata.
 
@@ -80,12 +83,16 @@ Question:
 - What exact MVP settings should be exposed in the first settings panel, and which should remain implicit defaults?
 
 Impact:
-- Page/export settings and document metadata remain incomplete until the settings UI and sidecar schema are finalized.
+- Page/export settings and document metadata needed a compact UI before Phase 2 could be considered complete.
+
+Resolution:
+- Added a compact Document Settings dialog.
+- Settings now cover selected style, view mode, page size, page orientation, margins, document metadata, and export defaults.
+- Settings are written to and restored from the existing sidecar metadata structure.
+- The File menu and command bar both expose Document Settings.
 
 Next step:
-- Build a compact settings panel for selected style, default view mode, page size, margins, document metadata, and export defaults.
-
-## Resolved
+- Use these sidecar-backed settings during the Phase 1.5 export spike and Phase 3 export implementation.
 
 ## ISSUE-018: Convert STYLES.md into a real CSS style
 
@@ -141,7 +148,7 @@ Resolution:
 - Supported fields currently applied by the renderer are `style.id` and `view.mode`; unsupported sections are preserved for later settings/export work.
 
 Next step:
-- Build ISSUE-004 settings UI on top of the sidecar-backed fields.
+- Use the sidecar-backed fields during export spike and export implementation work.
 
 ## ISSUE-015: Link and image insertion dialogs
 
