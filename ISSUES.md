@@ -43,31 +43,6 @@ Next step:
 
 ## Open
 
-## ISSUE-018: Convert STYLES.md into a real CSS style
-
-Status: open
-Area: app
-Raised in: 2026-05-25
-Owner: shared
-
-Context:
-- `STYLES.md` now captures early Word-to-CSS guidance and extracted JKTS brand colours.
-- The app now loads built-in style CSS files from `styles/builtin/`.
-- Built-in style IDs should match CSS filenames without the `.css` extension.
-- The exported `memo`, `report`, and `compact` styles remain available as review baselines.
-- `styles/builtin/markleaf-light.css` is the first focused style draft using the MarkLeaf colour palette.
-- `styles/builtin/markleaf-dark.css` is a complementary dark companion style using the same reusable CSS structure.
-- `markleaf-light` is registered as the current default active app style.
-
-Question:
-- What should the first production-quality MarkLeaf Light style include before it becomes the baseline for additional built-in styles?
-
-Impact:
-- The style reference is now selectable and persistent, but the CSS still needs user review before the initial built-in style set is finalized.
-
-Next step:
-- Refine `styles/builtin/markleaf-light.css` first, then create an initial baseline of three built-in styles using the same file-backed ID convention.
-
 ## ISSUE-016: Signed and notarized macOS packaging
 
 Status: open
@@ -111,6 +86,34 @@ Next step:
 - Build a compact settings panel for selected style, default view mode, page size, margins, document metadata, and export defaults.
 
 ## Resolved
+
+## ISSUE-018: Convert STYLES.md into a real CSS style
+
+Status: resolved
+Area: app
+Raised in: 2026-05-25
+Resolved in: 2026-05-31
+Owner: shared
+
+Context:
+- `STYLES.md` captured early Word-to-CSS guidance and extracted JKTS brand colours.
+- MarkLeaf needed real selectable CSS styles rather than notes-only style guidance.
+
+Question:
+- How should the first document style reference become an app-backed CSS style without accumulating underdeveloped built-in styles?
+
+Impact:
+- Until this was resolved, style work could not be tested as persistent, file-backed app behavior.
+
+Resolution:
+- Added file-backed built-in style loading from `styles/builtin/`.
+- Registered `markleaf-light` as the default active style and `markleaf-dark` as its complementary dark companion.
+- Established `markleaf-light` and `markleaf-dark` as the development baseline style pair.
+- Removed the earlier exploratory `memo`, `report`, and `compact` built-in styles and their fallbacks.
+- Updated sidecar defaults and examples to use `markleaf-light`.
+
+Next step:
+- Track ongoing light/dark visual refinement in the spec as normal development work. Reopen or create an issue only if a specific style-system blocker appears.
 
 ## ISSUE-017: Sidecar schema and read/write round trip
 

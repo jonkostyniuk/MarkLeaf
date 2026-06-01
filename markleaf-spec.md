@@ -755,15 +755,12 @@ CSS should remain a universal, portable styling layer.
 
 The first focused style draft is `styles/builtin/markleaf-light.css`. It applies the Word-derived structure from `STYLES.md` using the MarkLeaf colour palette from this spec rather than the JKTS palette. It is registered as the current default built-in style under style id `markleaf-light`. A complementary dark companion style is available as `styles/builtin/markleaf-dark.css` under style id `markleaf-dark`.
 
-Built-in document styles are file-backed under `styles/builtin/`. Built-in style IDs should match CSS filenames without the `.css` extension:
+Built-in document styles are file-backed under `styles/builtin/`. Built-in style IDs should match CSS filenames without the `.css` extension. The current development baseline set is:
 
 - `styles/builtin/markleaf-light.css` maps to style id `markleaf-light`.
 - `styles/builtin/markleaf-dark.css` maps to style id `markleaf-dark`.
-- `styles/builtin/memo.css` maps to style id `memo`.
-- `styles/builtin/report.css` maps to style id `report`.
-- `styles/builtin/compact.css` maps to style id `compact`.
 
-The app should package `styles/builtin/` into standalone builds so the same style files are used during development and local packaged testing. The next style milestone is to confirm `markleaf-light` first, then establish an initial baseline set of three built-in styles.
+The app should package `styles/builtin/` into standalone builds so the same style files are used during development and local packaged testing. `markleaf-light` and `markleaf-dark` should remain the only built-in styles until this complementary pair is mature enough to serve as a stable pattern for additional styles.
 
 ### 12.4 Style Scope
 

@@ -129,7 +129,7 @@ The local macOS package icon is generated from `assets/brand/markleaf-logo-conce
 
 Document style guidance currently lives in [STYLES.md](STYLES.md). Built-in document styles are file-backed under [styles/builtin](styles/builtin), with style IDs matching CSS filenames without the `.css` extension.
 
-The current first-run style is [styles/builtin/markleaf-light.css](styles/builtin/markleaf-light.css), exposed as style id `markleaf-light`. A complementary dark style is available at [styles/builtin/markleaf-dark.css](styles/builtin/markleaf-dark.css), exposed as style id `markleaf-dark`. The exported `memo`, `report`, and `compact` styles remain available as review baselines before the initial built-in set is finalized.
+The current development baseline styles are [styles/builtin/markleaf-light.css](styles/builtin/markleaf-light.css), exposed as style id `markleaf-light`, and [styles/builtin/markleaf-dark.css](styles/builtin/markleaf-dark.css), exposed as style id `markleaf-dark`. Additional built-in styles are intentionally deferred until this light/dark pair is mature.
 
 Document image assets created through Insert Image are copied beside the saved Markdown document in a sibling `[filename].md.assets/` folder. This mirrors the sidecar metadata convention, where MarkLeaf writes `[filename].md.meta.json`.
 

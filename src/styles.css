@@ -791,27 +791,6 @@ h1 {
   height: auto;
 }
 
-.doc-style-memo {
-  box-shadow: none;
-}
-
-.doc-style-report {
-  font-family: Georgia, "Times New Roman", serif;
-}
-
-.doc-style-report h1 {
-  font-size: 34px;
-}
-
-.doc-style-compact {
-  font-size: 14px;
-}
-
-.doc-style-compact p,
-.doc-style-compact li {
-  line-height: 1.45;
-}
-
 .statusbar {
   display: flex;
   align-items: center;

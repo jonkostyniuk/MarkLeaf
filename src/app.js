@@ -47,21 +47,6 @@ const styles = {
     label: "MarkLeaf Dark",
     className: "doc-style-markleaf-dark",
     fileName: "markleaf-dark.css"
-  },
-  memo: {
-    label: "Technical memo",
-    className: "doc-style-memo",
-    fileName: "memo.css"
-  },
-  report: {
-    label: "Report",
-    className: "doc-style-report",
-    fileName: "report.css"
-  },
-  compact: {
-    label: "Compact draft",
-    className: "doc-style-compact",
-    fileName: "compact.css"
   }
 };
 
