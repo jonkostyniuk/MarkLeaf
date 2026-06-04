@@ -822,8 +822,7 @@ Current first-pass implementation:
 - PDF export uses Electron/Chromium `webContents.printToPDF()`.
 - The app creates a hidden export window containing only the styled document, not the MarkLeaf UI.
 - The renderer sends rendered Markdown HTML, selected built-in CSS, sidecar page settings, export settings, and document metadata to the main process.
-- Sidecar page size and orientation are applied through generated print CSS with `@page`.
-- Sidecar margins are simulated as padding inside the painted PDF export surface so the selected style's `--doc-color-background` can fill the whole exported page rather than only the content body.
+- Sidecar page size, orientation, and margins are applied through generated print CSS with `@page` so every PDF page gets consistent top, bottom, left, and right spacing.
 - The PDF export renderer may extract `--doc-color-background` from the selected CSS and apply it to the generated page wrapper because Chromium does not reliably paint `@page background` alone.
 - Documents must be saved before export so output filenames and document-relative image paths are stable.
 

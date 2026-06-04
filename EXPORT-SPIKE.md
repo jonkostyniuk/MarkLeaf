@@ -12,8 +12,8 @@ Approach:
 - Renderer sends the current built-in CSS, selected style class, sidecar page settings, export settings, and document metadata to the Electron main process.
 - Electron creates a hidden export window containing only the styled document, not the app UI.
 - Electron exports that hidden document with `webContents.printToPDF()`.
-- Generated print CSS applies sidecar page size and orientation with `@page`.
-- PDF margins are simulated with padding inside the painted export page so document backgrounds can cover the full PDF canvas.
+- Generated print CSS applies sidecar page size, orientation, and margins with `@page`.
+- PDF margins must remain real per-page margins so every page gets top, bottom, left, and right spacing.
 - The export renderer extracts `--doc-color-background` from the selected CSS and applies it to the PDF page background because Chromium does not reliably paint `@page background` alone.
 
 Current behavior:

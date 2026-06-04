@@ -445,7 +445,7 @@ function buildPdfExportHtml(payload) {
 
     @page {
       size: ${page.size} ${page.orientation};
-      margin: 0;
+      margin: ${page.margins.top} ${page.margins.right} ${page.margins.bottom} ${page.margins.left};
       background: var(--markleaf-pdf-page-background);
     }
 
@@ -479,9 +479,8 @@ function buildPdfExportHtml(payload) {
     .markleaf-pdf-export.document.doc-style {
       max-width: none;
       margin: 0;
-      min-height: 100vh;
       box-sizing: border-box;
-      padding: ${page.margins.top} ${page.margins.right} ${page.margins.bottom} ${page.margins.left};
+      padding: 0;
       background: var(--doc-color-background, var(--markleaf-pdf-page-background));
     }
 
