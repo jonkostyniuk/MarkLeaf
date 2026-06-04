@@ -36,7 +36,7 @@ The current technical direction is:
 - CodeMirror 6 for raw Markdown editing
 - `markdown-it` preview rendering with a GitHub Flavoured Markdown-aligned baseline
 
-Export quality is a major early risk. Pandoc is one candidate for DOCX/PDF export, but MarkLeaf should also evaluate other approaches before committing to a final pipeline.
+Export quality is a major early risk. The current PDF baseline uses Electron/Chromium `printToPDF()` from a hidden styled-document export window. Pandoc remains one candidate for DOCX export, but MarkLeaf should also evaluate other approaches before committing to the final DOCX pipeline.
 
 ## Development Approach
 
@@ -89,7 +89,8 @@ Implemented prototype features:
 - Heading outline
 - Recent file links, capped at the five most recently opened files
 - Collapsible left sidebar sections
-- Document Settings dialog for style, view mode, page settings, document metadata, and export defaults
+- Document Settings dialog for page settings, document metadata, and export defaults
+- First-pass PDF export using the selected built-in style and sidecar page settings
 - Native Electron open/save/save-as dialogs
 - Unsaved new documents remain in memory until the first manual save
 - Shared icon-and-colour document status in the title bar and sidebar
@@ -108,6 +109,7 @@ Known implementation gaps are tracked in [ISSUES.md](ISSUES.md).
 - [markleaf-spec.md](markleaf-spec.md): product direction, technical architecture, development phases, design principles, and MVP scope.
 - [ISSUES.md](ISSUES.md): running backlog for unresolved questions, implementation blockers, follow-up decisions, and resolved project notes.
 - [STYLES.md](STYLES.md): early document-style reference based on Word layout guidance and extracted JKTS brand colours.
+- [EXPORT-SPIKE.md](EXPORT-SPIKE.md): current notes for early PDF/DOCX export validation.
 - [templates/markleaf-sidecar.template.jsonc](templates/markleaf-sidecar.template.jsonc): commented development reference for sidecar metadata.
 - [LICENSE](LICENSE): MIT License for the project.
 

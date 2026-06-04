@@ -1,15 +1,46 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": "1.0",
   "style": {
-    "id": "markleaf-light"
+    "id": "markleaf-dark",
+    "cssPath": ""
   },
   "view": {
     "mode": "split",
-    "wordWrap": true
+    "wordWrap": true,
+    "lastScrollPosition": 0,
+    "foldedHeadings": []
+  },
+  "document": {
+    "title": "MarkLeaf Style Sampler",
+    "author": "",
+    "subject": "PDF export fixture",
+    "keywords": [
+      "markleaf",
+      "pdf",
+      "fixture"
+    ],
+    "notes": "Representative Markdown fixture for styled preview and PDF export validation."
+  },
+  "page": {
+    "size": "letter",
+    "orientation": "portrait",
+    "margins": {
+      "top": "0.5in",
+      "right": "1in",
+      "bottom": "0.5in",
+      "left": "1in"
+    }
   },
   "export": {
-    "pdf": {},
-    "docx": {}
+    "pdf": {
+      "enabled": true,
+      "includePageNumbers": false,
+      "profile": "standard"
+    },
+    "docx": {
+      "enabled": true,
+      "mapCssFonts": true
+    }
   },
-  "updatedAt": "2026-05-24T14:19:07.733Z"
+  "updatedAt": "2026-06-04T00:44:56.921Z"
 }

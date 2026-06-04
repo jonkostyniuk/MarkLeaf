@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Code,
   Columns2,
+  FileDown,
   FileWarning,
   FilePlus,
   FolderOpen,
@@ -158,6 +159,7 @@ app.innerHTML = `
         <button type="button" data-action="open" class="icon-button" aria-label="Open Markdown file" data-tooltip="Open Markdown file">${icon(FolderOpen)}</button>
         <button type="button" data-action="save" class="icon-button" aria-label="Save document" data-tooltip="Save document">${icon(Save)}</button>
         <button type="button" data-action="saveAs" class="icon-button" aria-label="Save document as" data-tooltip="Save document as">${icon(SaveAll)}</button>
+        <button type="button" data-action="exportPdf" class="icon-button" aria-label="Export PDF" data-tooltip="Export PDF">${icon(FileDown)}</button>
         <button type="button" data-action="refresh" class="icon-button" aria-label="Reload from disk" data-tooltip="Reload from disk">${icon(RefreshCw)}</button>
         <button type="button" data-action="settings" class="icon-button" aria-label="Document settings" data-tooltip="Document settings">${icon(Settings)}</button>
       </div>
@@ -666,6 +668,7 @@ async function handleAction(action) {
   if (action === "open") await openWithPicker();
   if (action === "save") await saveNow();
   if (action === "saveAs") await saveAs();
+  if (action === "exportPdf") await exportPdf();
   if (action === "refresh") await refreshFromDisk();
   if (action === "settings") openSettingsDialog();
 }
@@ -1143,6 +1146,67 @@ async function saveAs() {
   URL.revokeObjectURL(url);
 }
 
+async function exportPdf() {
+  if (!isElectron || !desktopApi?.exportPdf) {
+    state.saveError = "MarkLeaf must run as the Electron desktop app to export PDF.";
+    render();
+    return;
+  }
+
+  if (!state.exportSettings.pdf.enabled) {
+    state.saveError = "PDF export is disabled in Document Settings.";
+    render();
+    return;
+  }
+
+  if (state.diskChanged) {
+    state.saveError = "Resolve the disk-changed state before exporting PDF.";
+    render();
+    return;
+  }
+
+  const ready = await prepareCurrentDocumentForExport();
+  if (!ready) return;
+
+  await loadSelectedStyleCss();
+  const selectedStyle = styles[state.selectedStyle] ? state.selectedStyle : "markleaf-light";
+  const result = await desktopApi.exportPdf({
+    filePath: state.filePath,
+    html: renderMarkdown(state.markdown),
+    styleId: selectedStyle,
+    styleClassName: styles[selectedStyle].className,
+    styleCss: state.selectedStyleCss,
+    pageSettings: state.pageSettings,
+    exportSettings: state.exportSettings,
+    documentInfo: state.documentInfo
+  });
+
+  if (result?.ok) {
+    state.saveError = "";
+    render();
+    return;
+  }
+
+  if (!result?.canceled) {
+    state.saveError = result?.error || "Unable to export PDF.";
+    render();
+  }
+}
+
+async function prepareCurrentDocumentForExport() {
+  clearAutoSave();
+
+  if (!state.filePath) {
+    const result = await saveWithDesktopApi(true);
+    return Boolean(result?.ok);
+  }
+
+  if (!state.dirty) return true;
+
+  const result = await saveWithDesktopApi(false);
+  return Boolean(result?.ok);
+}
+
 async function saveWithDesktopApi(saveAsDocument, options = {}) {
   const { applyResult = true } = options;
   try {
@@ -1305,7 +1369,11 @@ function bindDesktopEvents() {
       redo(editorView);
       return;
     }
-    const action = command === "save-as" ? "saveAs" : command;
+    const action = command === "save-as"
+      ? "saveAs"
+      : command === "export-pdf"
+        ? "exportPdf"
+        : command;
     handleAction(action);
   });
 }

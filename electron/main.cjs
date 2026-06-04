@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 const rendererIndex = path.join(__dirname, "..", "dist", "index.html");
 const OWN_WRITE_SUPPRESSION_MS = 1500;
@@ -93,6 +94,8 @@ function installMenu() {
         { label: "Save", accelerator: "CmdOrCtrl+S", click: () => mainWindow?.webContents.send("menu:save") },
         { label: "Save As...", accelerator: "CmdOrCtrl+Shift+S", click: () => mainWindow?.webContents.send("menu:save-as") },
         { type: "separator" },
+        { label: "Export PDF...", accelerator: "CmdOrCtrl+E", click: () => mainWindow?.webContents.send("menu:export-pdf") },
+        { type: "separator" },
         { label: "Reload from Disk", accelerator: "CmdOrCtrl+R", click: () => mainWindow?.webContents.send("menu:refresh") },
         { type: "separator" },
         { label: "Document Settings...", accelerator: "CmdOrCtrl+,", click: () => mainWindow?.webContents.send("menu:settings") }
@@ -178,6 +181,14 @@ ipcMain.handle("document:save", async (_event, payload) => {
 
 ipcMain.handle("document:saveAs", async (_event, payload) => {
   return saveAs(payload);
+});
+
+ipcMain.handle("export:pdf", async (_event, payload) => {
+  try {
+    return await exportPdf(payload);
+  } catch (error) {
+    return { ok: false, error: error.message || "Unable to export PDF." };
+  }
 });
 
 ipcMain.handle("document:refresh", async (_event, filePath) => {
@@ -363,6 +374,176 @@ async function saveAs(payload) {
 
   await writeDocument(result.filePath, payload?.markdown || "", payload?.metadata);
   return readFileResult(result.filePath);
+}
+
+async function exportPdf(payload = {}) {
+  if (!payload.filePath) {
+    return { ok: false, error: "Save the Markdown document before exporting PDF." };
+  }
+
+  const defaultPath = path.join(
+    path.dirname(payload.filePath),
+    `${path.basename(payload.filePath, path.extname(payload.filePath))}.pdf`
+  );
+  const saveResult = await dialog.showSaveDialog(mainWindow, {
+    title: "Export PDF",
+    defaultPath,
+    filters: [{ name: "PDF", extensions: ["pdf"] }]
+  });
+
+  if (saveResult.canceled || !saveResult.filePath) {
+    return { ok: false, canceled: true };
+  }
+
+  const exportWindow = new BrowserWindow({
+    width: 960,
+    height: 1200,
+    show: false,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+
+  const tempDir = await fs.promises.mkdtemp(path.join(app.getPath("temp"), "markleaf-pdf-"));
+  const tempHtmlPath = path.join(tempDir, "export.html");
+  await fs.promises.writeFile(tempHtmlPath, buildPdfExportHtml(payload), "utf8");
+
+  try {
+    await exportWindow.loadFile(tempHtmlPath);
+    const pdfBuffer = await exportWindow.webContents.printToPDF({
+      printBackground: true,
+      preferCSSPageSize: true
+    });
+    await fs.promises.writeFile(saveResult.filePath, pdfBuffer);
+    return { ok: true, filePath: saveResult.filePath };
+  } finally {
+    exportWindow.close();
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+function buildPdfExportHtml(payload) {
+  const page = normalizePdfPageSettings(payload.pageSettings);
+  const documentDirUrl = pathToFileURL(path.dirname(payload.filePath)).toString();
+  const title = payload.documentInfo?.title || path.basename(payload.filePath);
+  const profile = payload.exportSettings?.pdf?.profile || "standard";
+  const pageBackground = getCssCustomProperty(payload.styleCss || "", "--doc-color-background") || "#ffffff";
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base href="${escapeHtml(`${documentDirUrl}/`)}">
+  <title>${escapeHtml(title)}</title>
+  <style>${payload.styleCss || ""}</style>
+  <style>
+    :root {
+      --markleaf-pdf-page-background: ${pageBackground};
+    }
+
+    @page {
+      size: ${page.size} ${page.orientation};
+      margin: 0;
+      background: var(--markleaf-pdf-page-background);
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--markleaf-pdf-page-background);
+    }
+
+    body {
+      position: relative;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: var(--markleaf-pdf-page-background);
+    }
+
+    .markleaf-pdf-export {
+      width: 100%;
+      min-height: 100%;
+      box-sizing: border-box;
+    }
+
+    .markleaf-pdf-export.document.doc-style {
+      max-width: none;
+      margin: 0;
+      min-height: 100vh;
+      box-sizing: border-box;
+      padding: ${page.margins.top} ${page.margins.right} ${page.margins.bottom} ${page.margins.left};
+      background: var(--doc-color-background, var(--markleaf-pdf-page-background));
+    }
+
+    .markleaf-pdf-export img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body data-pdf-profile="${escapeAttribute(profile)}">
+  <main class="markleaf-pdf-export document doc-style ${escapeAttribute(payload.styleClassName || "")}">
+    ${payload.html || ""}
+  </main>
+</body>
+</html>`;
+}
+
+function getCssCustomProperty(css, propertyName) {
+  const escapedName = propertyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = new RegExp(`${escapedName}\\s*:\\s*([^;{}]+);`).exec(css);
+  if (!match) return "";
+
+  const value = match[1].trim();
+  if (!value || /[;{}]/.test(value)) return "";
+  return value;
+}
+
+function normalizePdfPageSettings(pageSettings = {}) {
+  const sizeMap = {
+    letter: "Letter",
+    a4: "A4",
+    legal: "Legal"
+  };
+  const margins = pageSettings.margins || {};
+  return {
+    size: sizeMap[pageSettings.size] || "Letter",
+    orientation: pageSettings.orientation === "landscape" ? "landscape" : "portrait",
+    margins: {
+      top: normalizeCssLength(margins.top, "1in"),
+      right: normalizeCssLength(margins.right, "1in"),
+      bottom: normalizeCssLength(margins.bottom, "1in"),
+      left: normalizeCssLength(margins.left, "1in")
+    }
+  };
+}
+
+function normalizeCssLength(value, fallback) {
+  const trimmed = String(value || "").trim();
+  return /^(\d+|\d*\.\d+)(in|cm|mm|pt|px)$/.test(trimmed) ? trimmed : fallback;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value);
 }
 
 async function writeDocument(filePath, markdown, metadata = {}) {

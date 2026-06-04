@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld("markleaf", {
   openRecentDocument: (filePath) => ipcRenderer.invoke("document:openRecent", filePath),
   saveDocument: (payload) => ipcRenderer.invoke("document:save", payload),
   saveDocumentAs: (payload) => ipcRenderer.invoke("document:saveAs", payload),
+  exportPdf: (payload) => ipcRenderer.invoke("export:pdf", payload),
   refreshDocument: (filePath) => ipcRenderer.invoke("document:refresh", filePath),
   openExternalLink: (url) => ipcRenderer.invoke("link:openExternal", url),
   readBuiltinStyle: (styleId) => ipcRenderer.invoke("style:readBuiltin", styleId),
@@ -26,7 +27,7 @@ contextBridge.exposeInMainWorld("markleaf", {
     return () => ipcRenderer.removeListener("document:external-change", listener);
   },
   onMenuCommand: (callback) => {
-    const channels = ["menu:new", "menu:open", "menu:save", "menu:save-as", "menu:refresh", "menu:settings", "menu:undo", "menu:redo"];
+    const channels = ["menu:new", "menu:open", "menu:save", "menu:save-as", "menu:export-pdf", "menu:refresh", "menu:settings", "menu:undo", "menu:redo"];
     const listeners = channels.map((channel) => {
       const listener = () => callback(channel.replace("menu:", ""));
       ipcRenderer.on(channel, listener);

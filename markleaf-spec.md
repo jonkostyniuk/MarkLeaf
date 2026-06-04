@@ -817,6 +817,16 @@ Required:
 - Apply document fonts where practical.
 - Preserve headings, lists, tables, links, blockquotes, code blocks, and images.
 
+Current first-pass implementation:
+
+- PDF export uses Electron/Chromium `webContents.printToPDF()`.
+- The app creates a hidden export window containing only the styled document, not the MarkLeaf UI.
+- The renderer sends rendered Markdown HTML, selected built-in CSS, sidecar page settings, export settings, and document metadata to the main process.
+- Sidecar page size and orientation are applied through generated print CSS with `@page`.
+- Sidecar margins are simulated as padding inside the painted PDF export surface so the selected style's `--doc-color-background` can fill the whole exported page rather than only the content body.
+- The PDF export renderer may extract `--doc-color-background` from the selected CSS and apply it to the generated page wrapper because Chromium does not reliably paint `@page background` alone.
+- Documents must be saved before export so output filenames and document-relative image paths are stable.
+
 Preferred:
 
 - Page numbering.
@@ -1323,8 +1333,8 @@ Goal: Validate export quality before the editor experience depends on a fragile 
 
 Deliverables:
 
-- Representative export fixture Markdown document.
-- PDF export proof using selected CSS and sidecar page settings.
+- Representative export fixture Markdown document. First fixture: `examples/lorem-style-sampler.md`.
+- PDF export proof using selected CSS and sidecar page settings. First pass uses Electron/Chromium `printToPDF()`.
 - DOCX export proof with Word-continuable structure.
 - Export pipeline comparison, including Pandoc and other viable options.
 - Recommendation for the first supported export implementation.
@@ -1346,9 +1356,9 @@ Deliverables:
 
 Current baseline status:
 
-- Implemented: file watcher, unsaved change handling, toolbar controls, recent files, word/character count, outline panel, shared save/disk status, link dialog, image dialog, resizable split panes, sidecar read/write round trip, and compact Document Settings dialog.
+- Implemented: file watcher, unsaved change handling, toolbar controls, recent files, word/character count, outline panel, shared save/disk status, link dialog, image dialog, resizable split panes, sidecar read/write round trip, compact Document Settings dialog, and first-pass PDF export.
 - Partially implemented: conflict handling through `Disk changed` status and manual Reload from disk; a richer conflict prompt/diff is deferred.
-- Remaining: no open Phase 2 editor blocker; export/page settings are sidecar-backed and ready for the export spike.
+- Remaining: no open Phase 2 editor blocker; PDF export has a first-pass implementation, while DOCX export remains the next major export spike.
 
 ### 26.4 Phase 3 — Export System
 

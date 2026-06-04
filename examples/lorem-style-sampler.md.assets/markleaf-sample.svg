@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" role="img" aria-labelledby="title desc">
+  <title id="title">MarkLeaf sample image</title>
+  <desc id="desc">A simple sample image for PDF export testing.</desc>
+  <rect width="720" height="240" fill="#DDEFE8"/>
+  <rect x="24" y="24" width="672" height="192" rx="8" fill="#FAFAF7" stroke="#2F6F5E" stroke-width="2"/>
+  <path d="M115 158c-18-25-14-62 9-86 29 4 54 27 61 58-20 10-47 19-70 28z" fill="#2F6F5E"/>
+  <path d="M118 154c21-21 43-40 64-55" fill="none" stroke="#FAFAF7" stroke-width="5" stroke-linecap="round"/>
+  <text x="220" y="104" fill="#1F2933" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">MarkLeaf PDF Export</text>
+  <text x="220" y="146" fill="#6B7280" font-family="Arial, Helvetica, sans-serif" font-size="18">Document-relative SVG image fixture</text>
+</svg>

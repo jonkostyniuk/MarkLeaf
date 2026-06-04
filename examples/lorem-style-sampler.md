@@ -28,8 +28,27 @@ This paragraph includes **bold text**, *italic text*, ***bold italic text***,
 
 - [x] Add Markdown editor.
 - [x] Add split preview.
-- [ ] Add settings panel.
-- [ ] Add export pipeline.
+- [x] Add settings panel.
+- [x] Add first-pass PDF export.
+- [ ] Add DOCX export pipeline.
+
+## Heading Depth
+
+### Third-Level Heading
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+
+#### Fourth-Level Heading
+
+Integer posuere erat a ante venenatis dapibus posuere velit aliquet.
+
+##### Fifth-Level Heading
+
+Maecenas faucibus mollis interdum.
+
+###### Sixth-Level Heading
+
+Etiam porta sem malesuada magna mollis euismod.
 
 ## Blockquote
 
@@ -43,7 +62,12 @@ This paragraph includes **bold text**, *italic text*, ***bold italic text***,
 | H1-H6 | Document hierarchy | Ready |
 | Tables | Structured comparison | Ready |
 | Code | Technical snippets | Ready |
-| Export | PDF and DOCX | Pending |
+| PDF Export | Styled fixed output | First pass |
+| DOCX Export | Word-continuable output | Pending |
+
+## Image
+
+![MarkLeaf sample document image](lorem-style-sampler.md.assets/markleaf-sample.svg)
 
 ## Code Block
 
