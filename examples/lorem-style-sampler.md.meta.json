@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "style": {
-    "id": "markleaf-dark",
+    "id": "markleaf-light",
     "cssPath": ""
   },
   "view": {
@@ -26,9 +26,9 @@
     "orientation": "portrait",
     "margins": {
       "top": "0.5in",
-      "right": "1in",
+      "right": "0.5in",
       "bottom": "0.5in",
-      "left": "1in"
+      "left": "0.5in"
     }
   },
   "export": {
@@ -42,5 +42,5 @@
       "mapCssFonts": true
     }
   },
-  "updatedAt": "2026-06-04T01:06:22.187Z"
+  "updatedAt": "2026-06-08T02:19:26.122Z"
 }
