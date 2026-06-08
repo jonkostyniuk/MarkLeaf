@@ -119,7 +119,7 @@ Use `make help` for the maintained command list. The most common commands are:
 
 - `make install`: install Node dependencies.
 - `make build`: build the renderer into `dist/`.
-- `make build-mac-icon`: generate `build/icons/markleaf.icns` from the source PNG logo.
+- `make build-mac-icon`: generate `build/icons/markleaf.icns` from the current source logo.
 - `make dev`: build and launch the Electron desktop app.
 - `make package-mac`: build an unsigned local macOS `.app` under `release/` for alpha testing.
 - `make check`: run tests and Electron syntax checks.
@@ -129,7 +129,7 @@ Use `make help` for the maintained command list. The most common commands are:
 
 Brand and logo source files live in [assets/brand](assets/brand). This is the source-of-truth location for logo assets.
 
-The local macOS package icon is generated from `assets/brand/markleaf-logo-concept-1.png` into `build/icons/markleaf.icns` during `make package-mac`.
+The local macOS package icon is generated from `assets/brand/markleaf-logo-concept-2.svg` into `build/icons/markleaf.icns` during `make package-mac`.
 
 Document style guidance currently lives in [STYLES.md](STYLES.md). Built-in document styles are file-backed under [styles/builtin](styles/builtin), with style IDs matching CSS filenames without the `.css` extension.
 

@@ -674,13 +674,14 @@ This folder is the source of truth for working logo and brand artwork. Generated
 The current working logo asset is:
 
 ```text
-assets/brand/markleaf-logo-concept-1.png
+assets/brand/markleaf-logo-concept-2.svg
 ```
 
-The matching vector concept asset is:
+The previous concept assets are retained for reference:
 
 ```text
 assets/brand/markleaf-logo-concept-1.svg
+assets/brand/markleaf-logo-concept-1.png
 ```
 
 Packaging-specific application icons may be added later under a clearly named packaging resource folder, such as `assets/app-icons/` or `build/icons/`. They should not be mixed into `dist/` as source assets.
@@ -824,6 +825,7 @@ Current first-pass implementation:
 - The renderer sends rendered Markdown HTML, selected built-in CSS, sidecar page settings, export settings, and document metadata to the main process.
 - Sidecar page size, orientation, and margins are applied through generated print CSS with `@page` so every PDF page gets consistent top, bottom, left, and right spacing.
 - The PDF export renderer may extract `--doc-color-background` from the selected CSS and apply it to the generated page wrapper because Chromium does not reliably paint `@page background` alone.
+- When `export.pdf.includePageNumbers` is enabled, the PDF export renderer should use Chromium's footer template to add centered `Page X of Y` numbering while keeping sidecar page size, margins, and background CSS-driven. The footer should use the selected style font family where detected and choose black/white contrast from the style background.
 - Documents must be saved before export so output filenames and document-relative image paths are stable.
 
 Preferred:
@@ -1227,7 +1229,7 @@ Current alpha packaging baseline:
 
 - `make package-mac` builds an unsigned local macOS `.app` with Electron Builder.
 - The output is written under `release/`, currently `release/mac-arm64/MarkLeaf.app` on Apple Silicon.
-- The macOS `.app` icon is generated from `assets/brand/markleaf-logo-concept-1.png` into `build/icons/markleaf.icns` during packaging.
+- The macOS `.app` icon is generated from `assets/brand/markleaf-logo-concept-2.svg` into `build/icons/markleaf.icns` during packaging.
 - DMG packaging, code signing, notarization, and final production icon treatment are deferred until broader beta distribution.
 
 Open source distribution should include:

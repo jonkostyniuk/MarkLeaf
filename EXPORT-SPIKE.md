@@ -15,6 +15,7 @@ Approach:
 - Generated print CSS applies sidecar page size, orientation, and margins with `@page`.
 - PDF margins must remain real per-page margins so every page gets top, bottom, left, and right spacing.
 - The export renderer extracts `--doc-color-background` from the selected CSS and applies it to the PDF page background because Chromium does not reliably paint `@page background` alone.
+- When page numbers are enabled, Chromium's footer template is enabled while page size, margins, and background remain CSS-driven.
 
 Current behavior:
 
@@ -24,6 +25,8 @@ Current behavior:
 - Documents in `Disk changed` state must be resolved before export.
 - PDF output uses the selected built-in style and sidecar page settings.
 - PDF page and margin backgrounds use the selected style's `--doc-color-background`.
+- Optional page numbers use Chromium's footer template when `export.pdf.includePageNumbers` is enabled.
+- Page number footer text is centered as `Page X of Y`, uses the selected style's font family where detected, and chooses black or white text from the selected style background.
 - Document-relative images can resolve from the Markdown file location.
 
 Fixture:
@@ -39,10 +42,10 @@ Fixture:
 - Tables, blockquotes, code blocks, links, and images render cleanly.
 - Long documents paginate acceptably.
 - Link targets remain usable in the exported PDF where Chromium supports them.
+- Optional page numbers remain readable against both light and dark style backgrounds.
 
 ## Known Gaps
 
-- Page numbers are stored in settings but not rendered yet.
 - No print preview.
 - No dedicated success notification beyond a successful save dialog flow.
 - DOCX export is not implemented in this spike.

@@ -142,7 +142,7 @@ app.innerHTML = `
   <main class="shell">
     <header class="appbar">
       <div class="app-identity">
-        <img class="app-logo" src="../assets/brand/markleaf-logo-concept-1.png" alt="" aria-hidden="true">
+        <img class="app-logo" src="../assets/brand/markleaf-logo-concept-2.svg" alt="" aria-hidden="true">
         <div class="title-stack">
           <h1>MarkLeaf</h1>
           <span id="titleFileName" class="title-file"></span>
@@ -391,7 +391,7 @@ app.innerHTML = `
               </label>
               <label class="checkbox-field">
                 <input id="settingsPdfPageNumbersInput" type="checkbox">
-                <span>PDF page numbers</span>
+                <span>Include PDF page numbers</span>
               </label>
               <label class="form-field">
                 <span>PDF profile</span>
@@ -731,7 +731,6 @@ function render() {
   pathStatus.textContent = getPathStatus();
   modeStatus.textContent = `Mode: ${state.mode}`;
   watchStatus.textContent = getWatchStatus();
-  syncOpenSettingsDialog();
 
   renderOutline();
   renderRecentFiles();
@@ -844,12 +843,6 @@ function openSettingsDialog() {
 function closeSettingsDialog() {
   settingsDialog.hidden = true;
   editorView.focus();
-}
-
-function syncOpenSettingsDialog() {
-  if (!settingsDialog.hidden) {
-    syncSettingsDialog();
-  }
 }
 
 function syncSettingsDialog() {

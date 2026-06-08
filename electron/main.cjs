@@ -406,6 +406,7 @@ async function exportPdf(payload = {}) {
     }
   });
 
+  const includePageNumbers = Boolean(payload.exportSettings?.pdf?.includePageNumbers);
   const tempDir = await fs.promises.mkdtemp(path.join(app.getPath("temp"), "markleaf-pdf-"));
   const tempHtmlPath = path.join(tempDir, "export.html");
   await fs.promises.writeFile(tempHtmlPath, buildPdfExportHtml(payload), "utf8");
@@ -413,11 +414,14 @@ async function exportPdf(payload = {}) {
   try {
     await exportWindow.loadFile(tempHtmlPath);
     const pdfBuffer = await exportWindow.webContents.printToPDF({
+      displayHeaderFooter: includePageNumbers,
+      headerTemplate: includePageNumbers ? buildBlankPdfHeaderTemplate() : undefined,
+      footerTemplate: includePageNumbers ? buildPdfFooterTemplate(payload.styleCss || "") : undefined,
       printBackground: true,
       preferCSSPageSize: true
     });
     await fs.promises.writeFile(saveResult.filePath, pdfBuffer);
-    return { ok: true, filePath: saveResult.filePath };
+    return { ok: true, filePath: saveResult.filePath, pageNumbers: includePageNumbers };
   } finally {
     exportWindow.close();
     await fs.promises.rm(tempDir, { recursive: true, force: true });
@@ -506,6 +510,68 @@ function getCssCustomProperty(css, propertyName) {
   const value = match[1].trim();
   if (!value || /[;{}]/.test(value)) return "";
   return value;
+}
+
+function buildBlankPdfHeaderTemplate() {
+  return '<div style="width:100%; font-size:1px;"></div>';
+}
+
+function buildPdfFooterTemplate(styleCss) {
+  const pageBackground = getCssCustomProperty(styleCss, "--doc-color-background") || "#ffffff";
+  const fontFamily = getCssDeclaration(styleCss, "font-family") || "Arial, Helvetica, sans-serif";
+  const textColor = getContrastingTextColor(pageBackground);
+
+  return `
+    <div style="width:100%; text-align:center; color:${escapeAttribute(textColor)}; font-family:${escapeAttribute(fontFamily)}; font-size:9px; line-height:1; -webkit-print-color-adjust:exact;">
+      Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+    </div>
+  `;
+}
+
+function getCssDeclaration(css, propertyName) {
+  const escapedName = propertyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = new RegExp(`${escapedName}\\s*:\\s*([^;{}]+);`).exec(css);
+  if (!match) return "";
+
+  const value = match[1].trim();
+  if (!value || /[;{}]/.test(value)) return "";
+  return value;
+}
+
+function getContrastingTextColor(backgroundColor) {
+  const rgb = parseCssColor(backgroundColor);
+  if (!rgb) return "#000000";
+
+  const [r, g, b] = rgb.map((channel) => {
+    const normalized = channel / 255;
+    return normalized <= 0.03928
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 0.45 ? "#000000" : "#ffffff";
+}
+
+function parseCssColor(value) {
+  const color = String(value || "").trim();
+  const hex = /^#([a-f\d]{3}|[a-f\d]{6})$/i.exec(color);
+  if (hex) {
+    const normalized = hex[1].length === 3
+      ? hex[1].split("").map((char) => `${char}${char}`).join("")
+      : hex[1];
+    return [
+      parseInt(normalized.slice(0, 2), 16),
+      parseInt(normalized.slice(2, 4), 16),
+      parseInt(normalized.slice(4, 6), 16)
+    ];
+  }
+
+  const rgb = /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i.exec(color);
+  if (rgb) {
+    return rgb.slice(1, 4).map((channel) => Math.max(0, Math.min(255, Number(channel))));
+  }
+
+  return null;
 }
 
 function normalizePdfPageSettings(pageSettings = {}) {

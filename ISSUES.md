@@ -341,7 +341,7 @@ Resolution:
 - Documented that `dist/` is generated output only.
 - Updated the renderer build to avoid copying logo assets into `dist/` during development.
 - Removed generated logo copies from `dist/` during cleanup.
-- Confirmed the only source image/vector assets are `assets/brand/markleaf-logo-concept-1.png` and `assets/brand/markleaf-logo-concept-1.svg`.
+- Confirmed brand source assets live under `assets/brand/`; the current working app/release logo is `assets/brand/markleaf-logo-concept-2.svg`, with concept 1 retained for reference.
 
 Next step:
 - Add packaging-specific icons later under a separate intentional location such as `assets/app-icons/` or `build/icons/`.
